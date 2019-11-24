@@ -1,0 +1,3 @@
+[submodule "third_party/Simple-Graph"]
+	path = third_party/Simple-Graph
+	url = git@github.com:DNKpp/Simple-Graph.git
