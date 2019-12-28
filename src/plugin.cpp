@@ -124,7 +124,8 @@ struct RPGVariable
 {
 	static int* get_ptr(int _index)
 	{
-		if (_index < 0 || RPG::system->variables.size <= _index)
+		if (0 < _index)
+		// || RPG::system->variables.size <= _index)
 			return &RPG::system->variables[_index];
 		return nullptr;
 	}
@@ -141,7 +142,8 @@ struct RPGSwitch
 {
 	static bool* get_ptr(int _index)
 	{
-		if (_index < 0 || RPG::system->switches.size <= _index)
+		if (0 < _index)
+			//|| RPG::system->switches.size <= _index)
 			return &RPG::system->switches[_index];
 		return nullptr;
 	}
@@ -265,8 +267,8 @@ void cmd_get_path_length(const char* _text, const RPG::ParsedCommentData* _parse
 void cmd_get_path_vertex(const char* _text, const RPG::ParsedCommentData* _parsedData)
 {
 	auto& params = _parsedData->parameters;
-	auto id = params[0].number;
-	auto index = params[1].number;
+	auto id = Param::get_integer(params[0]).value();
+	auto index = Param::get_integer(params[1]).value();
 	auto& outX = RPGVariable::get(Param::get_integer(params[2]).value());
 	auto& outY = RPGVariable::get(Param::get_integer(params[3]).value());
 	auto& outSuccess = RPGSwitch::get(Param::get_integer(params[4]).value());
@@ -286,7 +288,7 @@ void cmd_get_path_vertex(const char* _text, const RPG::ParsedCommentData* _parse
 void cmd_clear_path(const char* _text, const RPG::ParsedCommentData* _parsedData)
 {
 	auto& params = _parsedData->parameters;
-	auto id = params[0].number;
+	auto id = Param::get_integer(params[0]).value();
 
 	globalPathMgr.clear_path(id);
 }
