@@ -10,6 +10,7 @@
 #include <string_view>
 #include <stdexcept>
 #include <charconv>
+#include <locale>
 
 #include "Vector.hpp"
 
@@ -84,6 +85,40 @@ private:
 	
 };
 
+struct RPGVariable
+{
+	static int* get_ptr(int _index)
+	{
+		if (_index < 0 || RPG::system->variables.size <= _index)
+			return &RPG::system->variables[_index];
+		return nullptr;
+	}
+
+	static int& get(int _index)
+	{
+		if (auto ptr = get_ptr(_index))
+			return *ptr;
+		throw std::runtime_error("RPG::Variable index out of bounds.");
+	}
+};
+
+struct RPGSwitch
+{
+	static bool* get_ptr(int _index)
+	{
+		if (_index < 0 || RPG::system->switches.size <= _index)
+			return &RPG::system->switches[_index];
+		return nullptr;
+	}
+
+	static bool& get(int _index)
+	{
+		if (auto ptr = get_ptr(_index))
+			return *ptr;
+		throw std::runtime_error("RPG::Switch index out of bounds.");
+	}
+};
+
 struct Param
 {
 	static std::optional<int> get_integer(const RPG::ParsedCommentParameter& _param)
@@ -91,42 +126,72 @@ struct Param
 		switch (_param.type)
 		{
 		case RPG::PARAM_NUMBER:
-			return get_from_number(_param);
+			return get_from_number<int>(_param);
 		case RPG::PARAM_TOKEN:
-		
+			return lookup_value<int>(std::begin(_param.text), std::end(_param.text));
 		default:
 			throw std::runtime_error("Invalid argument.");
 		}
 	}
 
 private:
-	static std::optional<int> get_from_number(const RPG::ParsedCommentParameter& _param)
+	template <class TType>
+	static TType get_from_number(const RPG::ParsedCommentParameter& _param)
 	{
-		auto index = static_cast<int>(_param.number);
-		if (0 <= index) // remark: no upper bound check necessary?
-			return RPG::variables[index];
-		return std::nullopt;
-		//throw std::runtime_error("Variables index out of bounds.");
+		return static_cast<TType>(_param.number);
 	}
 
-	static std::optional<int> get_from_token(const RPG::ParsedCommentParameter& _param)
+	template <class TType, class TIterator>
+	static std::optional<TType> lookup_value(TIterator _itr, const TIterator& _end)
 	{
-		std::string_view token{ _param.text };
-		if (token[0] == 'V')
+		std::string_view token(_itr, std::distance(_itr, _end));
+		if (std::empty(token))
+			return std::nullopt;
+
+		if constexpr (std::is_same_v<int, TType>)
 		{
-			auto valBegin = std::find_if_not(std::rbegin(token), std::rend(token), [](char _c) { return _c == 'V'; }).base();
+			auto valBegin = std::find_if_not(std::rbegin(token), std::rend(token), [](char _c) { return '0' <= _c && _c <= '9'; }).base();
+			if (valBegin == std::end(token))
+				return std::nullopt;
+
 			int curIndex = 0;
 			auto result = std::from_chars(&*valBegin, token.data() + token.size(), curIndex);
 		    if (result.ec == std::errc::invalid_argument)
-		        throw std::runtime_error("Invalid token.");
+		        return std::nullopt;
 
-			for (auto itr = std::begin(token); itr != valBegin; ++itr)
-				curIndex = RPG::variables[curIndex];
-
-			if (0 <= curIndex) // remark: no upper bound check necessary?
-				return RPG::variables[curIndex];
+			try
+			{
+				for (auto itr = std::begin(token); itr != valBegin; ++itr)
+				{
+					if (std::tolower(*itr, std::locale()) != 'v')
+						return std::nullopt;
+					
+					curIndex = RPGVariable::get(curIndex);
+				}
+				return RPGVariable::get(curIndex);
+			}
+			catch (const std::runtime_error& _e)
+			{
+			}
+			return std::nullopt;
 		}
-		throw std::runtime_error("Variables index out of bounds.");
+		else if constexpr (std::is_same_v<bool, TType>)
+		{
+			if (std::tolower(token[0], std::locale()) != 's')
+				return std::nullopt;
+
+			try
+			{
+				if (auto index = lookup_value<int>(_itr + 1, _end))
+					return RPGSwitch::get(index);
+			}
+			catch (const std::runtime_error& _e)
+			{
+			}
+			return std::nullopt;
+		}
+
+		return std::nullopt;		
 	}
 };
 
@@ -140,7 +205,7 @@ bool onComment(const char* _text, const RPG::ParsedCommentData* _parsedData, RPG
 		auto& params = _parsedData->parameters;
 		Pathfinder p;
 		auto length = p.calc_path({ 20, 20 });
-		auto& outLength = Integer::get(params[0]);
+		auto& outLength = RPGVariable::get(Param::get_integer(params[0]).value());
 		outLength = length;
 		return false;
 	}
@@ -148,7 +213,7 @@ bool onComment(const char* _text, const RPG::ParsedCommentData* _parsedData, RPG
 	{
 		auto& params = _parsedData->parameters;
 		auto id = params[0].number;
-		auto& outLength = Integer::get(params[1]);
+		auto& outLength = RPGVariable::get(Param::get_integer(params[1]).value());
 
 		auto& path = *stored_path;
 		outLength = std::size(path);
@@ -159,8 +224,8 @@ bool onComment(const char* _text, const RPG::ParsedCommentData* _parsedData, RPG
 		auto& params = _parsedData->parameters;
 		auto id = params[0].number;
 		auto index = params[1].number;
-		auto& outX = Integer::get(params[2]);
-		auto& outY = Integer::get(params[3]);
+		auto& outX = RPGVariable::get(Param::get_integer(params[2]).value());
+		auto& outY = RPGVariable::get(Param::get_integer(params[3]).value());
 
 		auto& path = *stored_path;
 		auto vertex = path[static_cast<std::size_t>(index)];
