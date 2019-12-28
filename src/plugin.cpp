@@ -52,8 +52,8 @@ public:
 	
 	void clear()
 	{
-		m_NextId = 1;
 		m_Paths.clear();
+		m_NextId = 1;
 	}
 
 private:
