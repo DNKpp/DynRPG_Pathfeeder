@@ -1,0 +1,5 @@
+For updated DynRPG source code files (within include\DynRPG), visit:
+
+  https://github.com/PepsiOtaku/DynRPG
+  
+As of 09/15/2015, the updated source does not require any additional patching of your game's files. It's only if you are developing new plugins. It uses the existing 0.20 dynloader.dll, libDynRPG.a, and RPG_RT.exe files.
