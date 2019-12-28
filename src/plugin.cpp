@@ -81,7 +81,11 @@ public:
 
 		//auto searcher = sl::graph::make_breadth_first_searcher<Vector>();
 
-		auto costCalculator = [](const Vector& _prevPos, const Vector& _pos) { return 1; }; // ToDo: calculate cost from terrain type
+		auto costCalculator = [](const Vector& _prevPos, const Vector& _pos)
+		{
+			auto tileId = RPG::map->getLowerLayerTileId(_pos.x, _pos.y);
+			return RPG::map->getTerrainId(tileId);
+		}; // ToDo: calculate cost from terrain type
 		auto heuristicCalculator = [](const Vector& _prevPos, const Vector& _pos)
 		{
 			auto diff = _pos - _prevPos;
