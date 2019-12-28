@@ -79,13 +79,12 @@ public:
 			}
 		};
 
-		//auto searcher = sl::graph::make_breadth_first_searcher<Vector>();
-
 		auto costCalculator = [](const Vector& _prevPos, const Vector& _pos)
 		{
 			auto tileId = RPG::map->getLowerLayerTileId(_pos.x, _pos.y);
 			return RPG::map->getTerrainId(tileId);
-		}; // ToDo: calculate cost from terrain type
+		};
+		
 		auto heuristicCalculator = [](const Vector& _prevPos, const Vector& _pos)
 		{
 			auto diff = _pos - _prevPos;
@@ -297,7 +296,6 @@ void cmd_clear_path(const char* _text, const RPG::ParsedCommentData* _parsedData
 	globalPathMgr.clear_path(id);
 }
 
-// called on comment
 bool onComment(const char* _text, const RPG::ParsedCommentData* _parsedData, RPG::EventScriptLine* _nextScriptLine,
 	RPG::EventScriptData* _scriptData, int _eventId, int _pageId, int _lineId, int* _nextLineId)
 {
