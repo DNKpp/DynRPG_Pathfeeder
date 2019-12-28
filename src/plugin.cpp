@@ -2,6 +2,8 @@
 //#define CUSTOM_DLLMAIN
 //#define _GLIBCXX_USE_CXX11_ABI 0
 
+// ToDo: Clear the globalPathManager object on map change
+
 #include "Simple-Graph/Searcher.hpp"
 
 #include <DynRPG/DynRPG.h>
@@ -11,6 +13,7 @@
 #include <stdexcept>
 #include <charconv>
 #include <locale>
+#include <unordered_map>
 
 #include "Vector.hpp"
 
@@ -22,12 +25,48 @@ bool is_valid_pos(const Vector& _at)
 		0 <= _at.y && _at.y < map.getHeight();
 }
 
-static std::optional<std::vector<Vector>> stored_path;
+using Path = std::vector<Vector>;
+
+class PathManager
+{
+public:
+	const Path* find_path(int _id) const
+	{
+		if (auto itr = m_Paths.find(_id); itr != std::end(m_Paths))
+			return &itr->second;
+		return nullptr;
+	}
+
+	int insert_path(Path _path)
+	{
+		auto id = m_NextId++;
+		m_Paths.emplace(id, std::move(_path));
+		return id;
+	}
+
+	void clear_path(int _id)
+	{
+		if (auto itr = m_Paths.find(_id); itr != std::end(m_Paths))
+			m_Paths.erase(itr);
+	}
+	
+	void clear()
+	{
+		m_NextId = 1;
+		m_Paths.clear();
+	}
+
+private:
+	int m_NextId = 1;
+	std::unordered_map<int, Path> m_Paths;
+};
+
+static inline PathManager globalPathMgr;
 
 class Pathfinder
 {
 public:
-	int calc_path(const Vector& _end)
+	std::optional<int> calc_path(const Vector& _end)
 	{
 		auto& character = *RPG::hero;
 		Vector start{ character.x, character.y };
@@ -72,13 +111,9 @@ public:
 			}
 		};
 
-		auto path = sl::graph::find_path(start, _end, neighbourSearcher, searcher, NodeMap(Map_t(VectorLess())), NodeMap(Map_t(VectorLess())));
-		if (path)
-		{
-			stored_path = std::move(path);
-			return std::size(*path);
-		}
-		return -1;
+		if (auto path = sl::graph::find_path(start, _end, neighbourSearcher, searcher, NodeMap(Map_t(VectorLess())), NodeMap(Map_t(VectorLess()))))
+			return globalPathMgr.insert_path(std::move(*path));
+		return std::nullopt;
 	}
 	
 private:
@@ -195,6 +230,67 @@ private:
 	}
 };
 
+void cmd_find_path(const char* _text, const RPG::ParsedCommentData* _parsedData)
+{
+	auto& params = _parsedData->parameters;
+	Pathfinder p;
+	
+	auto& outId = RPGVariable::get(Param::get_integer(params[0]).value());
+	auto& outSuccess = RPGSwitch::get(Param::get_integer(params[1]).value());
+	if (auto optId = p.calc_path({ 20, 20 }))
+	{
+		outId = *optId;
+		outSuccess = true;
+	}
+	else
+		outSuccess = false;
+}
+
+void cmd_get_path_length(const char* _text, const RPG::ParsedCommentData* _parsedData)
+{
+	auto& params = _parsedData->parameters;
+	auto id = Param::get_integer(params[0]).value();
+	auto& outLength = RPGVariable::get(Param::get_integer(params[1]).value());
+	auto& outSuccess = RPGSwitch::get(Param::get_integer(params[2]).value());
+
+	if (auto pathPtr = globalPathMgr.find_path(id))
+	{
+		outLength = std::size(*pathPtr);
+		outSuccess = true;
+	}
+	else
+		outSuccess = false;
+}
+
+void cmd_get_path_vertex(const char* _text, const RPG::ParsedCommentData* _parsedData)
+{
+	auto& params = _parsedData->parameters;
+	auto id = params[0].number;
+	auto index = params[1].number;
+	auto& outX = RPGVariable::get(Param::get_integer(params[2]).value());
+	auto& outY = RPGVariable::get(Param::get_integer(params[3]).value());
+	auto& outSuccess = RPGSwitch::get(Param::get_integer(params[4]).value());
+
+	if (auto pathPtr = globalPathMgr.find_path(id))
+	{
+		auto& path = *pathPtr;
+		auto vertex = path[static_cast<std::size_t>(index)];
+		outX = vertex.x;
+		outY = vertex.y;
+		outSuccess = true;
+	}
+	else
+		outSuccess = false;
+}
+
+void cmd_clear_path(const char* _text, const RPG::ParsedCommentData* _parsedData)
+{
+	auto& params = _parsedData->parameters;
+	auto id = params[0].number;
+
+	globalPathMgr.clear_path(id);
+}
+
 // called on comment
 bool onComment(const char* _text, const RPG::ParsedCommentData* _parsedData, RPG::EventScriptLine* _nextScriptLine,
 	RPG::EventScriptData* _scriptData, int _eventId, int _pageId, int _lineId, int* _nextLineId)
@@ -202,35 +298,22 @@ bool onComment(const char* _text, const RPG::ParsedCommentData* _parsedData, RPG
 	std::string_view cmd{ _parsedData->command };
 	if (cmd == "find_path")
 	{
-		auto& params = _parsedData->parameters;
-		Pathfinder p;
-		auto length = p.calc_path({ 20, 20 });
-		auto& outLength = RPGVariable::get(Param::get_integer(params[0]).value());
-		outLength = length;
+		cmd_find_path(_text, _parsedData);
 		return false;
 	}
 	else if (cmd == "get_path_length")
 	{
-		auto& params = _parsedData->parameters;
-		auto id = params[0].number;
-		auto& outLength = RPGVariable::get(Param::get_integer(params[1]).value());
-
-		auto& path = *stored_path;
-		outLength = std::size(path);
+		cmd_get_path_length(_text, _parsedData);
 		return false;
 	}
 	else if (cmd == "get_path_vertex")
 	{
-		auto& params = _parsedData->parameters;
-		auto id = params[0].number;
-		auto index = params[1].number;
-		auto& outX = RPGVariable::get(Param::get_integer(params[2]).value());
-		auto& outY = RPGVariable::get(Param::get_integer(params[3]).value());
-
-		auto& path = *stored_path;
-		auto vertex = path[static_cast<std::size_t>(index)];
-		outX = vertex.x;
-		outY = vertex.y;
+		cmd_get_path_vertex(_text, _parsedData);
+		return false;
+	}
+	else if (cmd == "clear_path")
+	{
+		cmd_clear_path(_text, _parsedData);
 		return false;
 	}
 	return true;
