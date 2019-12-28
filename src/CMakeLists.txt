@@ -13,7 +13,7 @@ set_property(TARGET Pathfinder
 )
 
 target_link_directories(Pathfinder
-    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/../dependencies/DynRPG_0_20/sdk/lib"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/../dependencies/DynRPG_0_32/sdk/lib"
 )
 
 TARGET_LINK_LIBRARIES(Pathfinder
@@ -22,7 +22,7 @@ TARGET_LINK_LIBRARIES(Pathfinder
 
 target_include_directories(Pathfinder
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/../dependencies/Simple-Graph/include"
-	PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/../dependencies/DynRPG_0_20/sdk/include"
+	PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/../dependencies/DynRPG_0_32/sdk/include"
 )
 
 add_custom_command(TARGET Pathfinder
