@@ -66,10 +66,9 @@ static inline PathManager globalPathMgr;
 class Pathfinder
 {
 public:
-	std::optional<int> calc_path(const Vector& _end)
+	std::optional<int> calc_path(const Vector& _end, RPG::Character& _character)
 	{
-		auto& character = *RPG::hero;
-		Vector start{ character.x, character.y };
+		Vector start{ _character.x, _character.y };
 
 		struct VectorLess
 		{
@@ -96,7 +95,7 @@ public:
 		using NodeMap = sl::graph::NodeMap<Map_t>;
 
 
-		auto neighbourSearcher = [&character](const auto& _node, auto&& _callback)
+		auto neighbourSearcher = [&_character](const auto& _node, auto&& _callback)
 		{
 			for (int i = 0; i < 4; ++i)
 			{
@@ -109,7 +108,7 @@ public:
 				case 3: dir.y = -1; break;
 				}
 				auto at = _node.vertex + dir;
-				if (is_valid_pos(at) && character.isMovePossible(_node.vertex.x, _node.vertex.y, at.x, at.y))
+				if (is_valid_pos(at) && _character.isMovePossible(_node.vertex.x, _node.vertex.y, at.x, at.y))
 					_callback(at);
 			}
 		};
@@ -167,8 +166,22 @@ struct Param
 		{
 		case RPG::PARAM_NUMBER:
 			return get_from_number<int>(_param);
+		/* It seems, the current DynRPG version already parses the values out of the token. So this is obsolete now?
 		case RPG::PARAM_TOKEN:
-			return lookup_value<int>(std::begin(_param.text), std::end(_param.text));
+			return lookup_value<int>(std::begin(_param.text), std::find(std::begin(_param.text), std::end(_param.text), 0));*/
+		default:
+			throw std::runtime_error("Invalid argument.");
+		}
+	}
+
+	static RPG::Character* get_character(const RPG::ParsedCommentParameter& _param)
+	{
+		switch (_param.type)
+		{
+		case RPG::PARAM_NUMBER:
+			return RPG::map->events[_param.number];
+		case RPG::PARAM_TOKEN:
+			return lookup_value<RPG::Character*>(std::begin(_param.text), std::find(std::begin(_param.text), std::end(_param.text), 0)).value_or(nullptr);
 		default:
 			throw std::runtime_error("Invalid argument.");
 		}
@@ -184,7 +197,7 @@ private:
 	template <class TType, class TIterator>
 	static std::optional<TType> lookup_value(TIterator _itr, const TIterator& _end)
 	{
-		std::string_view token(_itr, std::distance(_itr, _end));
+		std::string_view token(&*_itr, std::distance(_itr, _end));
 		if (std::empty(token))
 			return std::nullopt;
 
@@ -230,6 +243,29 @@ private:
 			}
 			return std::nullopt;
 		}
+		else if constexpr (std::is_same_v<RPG::Character*, std::remove_cv_t<TType>>)
+		{
+			std::string tokenStr(std::size(token), 0);
+			std::transform(std::begin(token), std::end(token), std::begin(tokenStr),
+				[](char _c){ return std::tolower(_c, std::locale()); }
+			);
+
+			if (tokenStr == "hero")
+				return RPG::hero;
+			if (tokenStr == "ship")
+				return RPG::vehicleShip;
+			if (tokenStr == "airship")
+				return RPG::vehicleAirship;
+			if (tokenStr == "skiff")
+				return RPG::vehicleSkiff;
+
+			// seems to be not necessary; let's just wait for the number
+			/*if (tokenStr[0] == 'n')
+			{
+				if (auto eventId = lookup_value<int>(std::begin(tokenStr) + 1, std::end(tokenStr)))
+					return RPG::map->events[*eventId];
+			}*/
+		}
 
 		return std::nullopt;		
 	}
@@ -238,33 +274,38 @@ private:
 void cmd_find_path(const char* _text, const RPG::ParsedCommentData* _parsedData)
 {
 	auto& params = _parsedData->parameters;
-	Pathfinder p;
-	
-	auto& outId = RPGVariable::get(Param::get_integer(params[0]).value());
-	auto& outSuccess = RPGSwitch::get(Param::get_integer(params[1]).value());
-	if (auto optId = p.calc_path({ 20, 20 }))
+	auto& outSuccess = RPGSwitch::get(Param::get_integer(params[4]).value());
+	outSuccess = false;
+
+	if (auto target = Param::get_character(params[0]))
 	{
-		outId = *optId;
-		outSuccess = true;
+		Pathfinder p;
+		auto x = Param::get_integer(params[1]).value();
+		auto y = Param::get_integer(params[2]).value();
+		auto& outId = RPGVariable::get(Param::get_integer(params[3]).value());
+		if (auto optId = p.calc_path({ x, y }, *target))
+		{
+			outId = *optId;
+			outSuccess = true;
+		}
 	}
-	else
-		outSuccess = false;
 }
 
 void cmd_get_path_length(const char* _text, const RPG::ParsedCommentData* _parsedData)
 {
 	auto& params = _parsedData->parameters;
+	auto& outSuccess = RPGSwitch::get(Param::get_integer(params[2]).value());
+	outSuccess = false;
+
 	auto id = Param::get_integer(params[0]).value();
 	auto& outLength = RPGVariable::get(Param::get_integer(params[1]).value());
-	auto& outSuccess = RPGSwitch::get(Param::get_integer(params[2]).value());
+	
 
 	if (auto pathPtr = globalPathMgr.find_path(id))
 	{
 		outLength = std::size(*pathPtr);
 		outSuccess = true;
 	}
-	else
-		outSuccess = false;
 }
 
 void cmd_get_path_vertex(const char* _text, const RPG::ParsedCommentData* _parsedData)
