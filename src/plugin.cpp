@@ -5,6 +5,7 @@
 // ToDo: Clear the globalPathManager object on map change
 
 #include "Simple-Graph/Searcher.hpp"
+#include "Simple-Utility/container/Vector2d.hpp"
 
 #include <DynRPG/DynRPG.h>
 #include <cassert>

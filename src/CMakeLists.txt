@@ -23,6 +23,7 @@ TARGET_LINK_LIBRARIES(Pathfinder
 
 target_include_directories(Pathfinder
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/../dependencies/Simple-Graph/include"
+	PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/../dependencies/Simple-Utility/include"
 	PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/../dependencies/DynRPG_0_32/sdk/include"
 )
 

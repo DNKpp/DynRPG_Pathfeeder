@@ -1,3 +1,6 @@
 [submodule "dependencies/Simple-Graph"]
 	path = dependencies/Simple-Graph
 	url = git@github.com:DNKpp/Simple-Graph.git
+[submodule "dependencies/Simple-Utility"]
+	path = dependencies/Simple-Utility
+	url = git@github.com:DNKpp/Simple-Utility.git
