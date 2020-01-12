@@ -5,8 +5,6 @@
 // ToDo: Clear the globalPathManager object on map change
 
 #include <DynRPG/DynRPG.h>
-#include <cassert>
-#include <iostream>
 #include <string_view>
 #include <stdexcept>
 #include <charconv>

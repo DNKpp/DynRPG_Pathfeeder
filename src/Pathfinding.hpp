@@ -5,24 +5,53 @@
 #include "Vector.hpp"
 
 #include <DynRPG/DynRPG.h>
-#include <unordered_map>
 
 using Path = std::vector<Vector>;
 
+template <class TData>
+using IdData = std::tuple<int, TData>;
+
+struct IdLess
+{
+	template <class TData>
+	bool operator ()(const IdData<TData>& _lhs, const IdData<TData>& _rhs) const
+	{
+		return std::get<0>(_lhs) < std::get<0>(_rhs);
+	}
+
+	template <class TData>
+	bool operator ()(const IdData<TData>& _lhs, int _rhs) const
+	{
+		return std::get<0>(_lhs) < _rhs;
+	}
+
+	template <class TData>
+	bool operator ()(int _lhs, const IdData<TData>& _rhs) const
+	{
+		return _lhs < std::get<0>(_rhs);
+	}
+};
+
+template <class TData>
+using IdDataSortedVector = sl::container::SortedVector<IdData<TData>, IdLess>;
+
 class PathManager
 {
+private:
+	using PathNode = IdData<Path>;
+	
 public:
 	const Path* find_path(int _id) const
 	{
 		if (auto itr = m_Paths.find(_id); itr != std::end(m_Paths))
-			return &itr->second;
+			return &std::get<Path>(*itr);
 		return nullptr;
 	}
 
 	int insert_path(Path _path)
 	{
 		auto id = m_NextId++;
-		m_Paths.emplace(id, std::move(_path));
+		m_Paths.insert(PathNode{ id, std::move(_path) });
 		return id;
 	}
 
@@ -40,7 +69,7 @@ public:
 
 private:
 	int m_NextId = 1;
-	std::unordered_map<int, Path> m_Paths;
+	IdDataSortedVector<Path> m_Paths;
 };
 
 inline static PathManager globalPathMgr;
@@ -50,7 +79,7 @@ class CostCalculator
 public:
 	void set_cost(int _terrain_id, int _cost)
 	{
-		m_CostMap.insert_or_assign(_terrain_id, _cost);
+		m_CostMap.insert_or_assign(IdData<int>{_terrain_id, _cost});
 	}
 	
 	void reset_cost(int _terrain_id)
@@ -62,7 +91,7 @@ public:
 	int get_cost(int _terrain_id) const
 	{
 		if (auto itr = m_CostMap.find(_terrain_id); itr != std::end(m_CostMap))
-			return itr->second;
+			return std::get<1>(*itr);
 		return _terrain_id;
 	}
 	
@@ -72,7 +101,7 @@ public:
 	}
 
 private:
-	std::unordered_map<int, int> m_CostMap;
+	IdDataSortedVector<int> m_CostMap;
 };
 
 inline static CostCalculator globalCostCalculator;
