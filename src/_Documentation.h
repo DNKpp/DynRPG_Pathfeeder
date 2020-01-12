@@ -33,6 +33,10 @@
 	\code @find_path in_target, in_x, in_y out_path_id, out_s_success
 	\endcode
 
+	\details This function is used to calculate the path from an event to a specific destination (x- and y-coordinate). The cost for each step is determined by the terrain id. To manipulate this cost look at the terrain_cost functions.
+
+	\attention This function may fail if the destination is not reachable. Please always check the success information before relying to the other output.
+
 	@param in_target Accepts event ids as plain number (1, 02, 500, ...) or as variable (v1, vV2, V3, ...). Accepts also specific tokens for special events (hero, airship, ship, skiff).
 	@param in_x Accepts x-coordinate as plain number (1, 02, 500, ...) or as variable (v1, vV2, V3, ...).
 	@param in_y Accepts y-coordinate as plain number (1, 02, 500, ...) or as variable (v1, vV2, V3, ...).
@@ -44,6 +48,10 @@
 	\code @get_path_length in_path_id, out_path_length, out_s_success
 	\endcode
 
+	\details Each path consists of several vertices (the map tiles). This function returns, how many of those tiles are included in this path (inclusive start and end tile).
+
+	\attention This function may fail if the path is not available. Please always check the success information before relying to the other output.
+
 	@param in_path_id Accepts path ids as plain number (1, 02, 500, ...) or as variable (v1, vV2, V3, ...). Identifies the path.
 	@param out_length Accepts an id for RPG::variables as plain number (1, 02, 500, ...) or as variable (v1, vV2, V3, ...). It will insert the length of the path at the passed index.
 	@param out_s_success Accepts id for RPG::switches as plain number (1, 02, 500, ...) or as variable (v1, vV2, V3, ...). It will use the provided value as switch index to hand back the result of the function (false = it failed; true = success).
@@ -52,6 +60,11 @@
 	\subsubsection get_path_vertex Get Path vertex
 	\code @get_path_vertex in_path_id, in_vertex_index, out_vertex_x, out_vertex_y, out_s_success
 	\endcode
+
+	\details This function returns information about one specific vertex. To get the right one, you have to determine which path you want to look at. Each path consists of several vertices (the map tiles), thus you have to tell the plugin
+		which specific vertex you are interested in. The x- and y-coordinate will be returned into a RPG::variable at the passed id.
+
+	\attention This function may fail if the path is not available or the vertex index is out of bounds. Please always check the success information before relying to the other output.
 
 	@param in_path_id Accepts path ids as plain number (1, 02, 500, ...) or as variable (v1, vV2, V3, ...). Identifies the path.
 	@param in_vertex_index Accepts vertex index (starting at 0) as plain number (1, 02, 500, ...) or as variable (v1, vV2, V3, ...). Identifies the path of which you will get the length for.
@@ -66,10 +79,14 @@
 
 	@param in_path_id Accepts path ids as plain number (1, 02, 500, ...) or as variable (v1, vV2, V3, ...). Identifies the path.
 
+	\details Every path you generated via this plugin will be stored internally to be able to provide the needed information when necessary. When you are done with the path, you should clear it to free memory for further tasks.
+
 
 	\subsubsection set_terrain_cost Set Terrain Cost
 	\code @set_terrain_cost in_terrain_id, in_cost
 	\endcode
+
+	\details The cost for the specified terrain will be used for future path finding tasks. It will be cached internally until you reset the specific terrain or clear everything.
 
 	@param in_terrain_id Accepts value as plain number (1, 02, 500, ...) or as variable (v1, vV2, V3, ...). Identifies the terrain id the cost will be used for.
 	@param in_terrain_id Accepts value as plain number (1, 02, 500, ...) or as variable (v1, vV2, V3, ...). This will be used as cost of the given terrain id.
@@ -79,6 +96,8 @@
 	\code @reset_terrain_cost in_terrain_id
 	\endcode
 
+	\details The cost for the specified terrain will be reset to default (terrain id as cost).
+
 	@param in_terrain_id Accepts value as plain number (1, 02, 500, ...) or as variable (v1, vV2, V3, ...). Identifies the terrain id to be reset.
 
 
@@ -86,10 +105,14 @@
 	\code @clear_terrain_costs
 	\endcode
 
+	\details Clears every cached cost value.
+
 
 	\subsubsection get_terrain_cost Get Terrain Cost
 	\code @get_terrain_cost in_terrain_id, out_cost
 	\endcode
+
+	\details Returns the current cached terrain cost into the RPG::variable with the specified id.
 
 	@param in_terrain_id Accepts value as plain number (1, 02, 500, ...) or as variable (v1, vV2, V3, ...). Identifies the terrain id to be reset.
 	@param out_cost Accepts value as plain number (1, 02, 500, ...) or as variable (v1, vV2, V3, ...). It will insert the cost of the terrain at the passed index.
