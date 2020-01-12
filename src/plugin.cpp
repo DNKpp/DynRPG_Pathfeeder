@@ -61,7 +61,39 @@ private:
 	std::unordered_map<int, Path> m_Paths;
 };
 
-static inline PathManager globalPathMgr;
+inline static PathManager globalPathMgr;
+
+class CostCalculator
+{
+public:
+	void set_cost(int _terrain_id, int _cost)
+	{
+		m_CostMap.insert_or_assign(_terrain_id, _cost);
+	}
+	
+	void reset_cost(int _terrain_id)
+	{
+		if (auto itr = m_CostMap.find(_terrain_id); itr != std::end(m_CostMap))
+			m_CostMap.erase(itr);
+	}
+	
+	int get_cost(int _terrain_id) const
+	{
+		if (auto itr = m_CostMap.find(_terrain_id); itr != std::end(m_CostMap))
+			return itr->second;
+		return _terrain_id;
+	}
+	
+	void clear()
+	{
+		m_CostMap.clear();
+	}
+
+private:
+	std::unordered_map<int, int> m_CostMap;
+};
+
+inline static CostCalculator globalCostCalculator;
 
 class Pathfinder
 {
@@ -81,7 +113,7 @@ public:
 		auto costCalculator = [](const Vector& _prevPos, const Vector& _pos)
 		{
 			auto tileId = RPG::map->getLowerLayerTileId(_pos.x, _pos.y);
-			return RPG::map->getTerrainId(tileId);
+			return globalCostCalculator.get_cost(RPG::map->getTerrainId(tileId));
 		};
 		
 		auto heuristicCalculator = [](const Vector& _prevPos, const Vector& _pos)
@@ -337,6 +369,38 @@ void cmd_clear_path(const char* _text, const RPG::ParsedCommentData* _parsedData
 	globalPathMgr.clear_path(id);
 }
 
+void cmd_set_terrain_cost(const char* _text, const RPG::ParsedCommentData* _parsedData)
+{
+	auto& params = _parsedData->parameters;
+	auto id = Param::get_integer(params[0]).value();
+	auto cost = Param::get_integer(params[1]).value();
+
+	globalCostCalculator.set_cost(id, cost);
+}
+
+void cmd_get_terrain_cost(const char* _text, const RPG::ParsedCommentData* _parsedData)
+{
+	auto& params = _parsedData->parameters;
+	auto id = Param::get_integer(params[0]).value();
+	auto& outCost = RPGVariable::get(Param::get_integer(params[1]).value());
+
+	outCost = globalCostCalculator.get_cost(id);
+}
+
+void cmd_reset_terrain_cost(const char* _text, const RPG::ParsedCommentData* _parsedData)
+{
+	auto& params = _parsedData->parameters;
+	auto id = Param::get_integer(params[0]).value();
+
+	globalCostCalculator.reset_cost(id);
+}
+
+void cmd_clear_terrain_costs(const char* _text, const RPG::ParsedCommentData* _parsedData)
+{
+	auto& params = _parsedData->parameters;
+	globalCostCalculator.clear();
+}
+
 bool onComment(const char* _text, const RPG::ParsedCommentData* _parsedData, RPG::EventScriptLine* _nextScriptLine,
 	RPG::EventScriptData* _scriptData, int _eventId, int _pageId, int _lineId, int* _nextLineId)
 {
@@ -359,6 +423,26 @@ bool onComment(const char* _text, const RPG::ParsedCommentData* _parsedData, RPG
 	else if (cmd == "clear_path")
 	{
 		cmd_clear_path(_text, _parsedData);
+		return false;
+	}
+	else if (cmd == "set_terrain_cost")
+	{
+		cmd_set_terrain_cost(_text, _parsedData);
+		return false;
+	}
+	else if (cmd == "reset_terrain_cost")
+	{
+		cmd_reset_terrain_cost(_text, _parsedData);
+		return false;
+	}
+	else if (cmd == "get_terrain_cost")
+	{
+		cmd_get_terrain_cost(_text, _parsedData);
+		return false;
+	}
+	else if (cmd == "clear_terrain_costs")
+	{
+		cmd_clear_terrain_costs(_text, _parsedData);
 		return false;
 	}
 	return true;
