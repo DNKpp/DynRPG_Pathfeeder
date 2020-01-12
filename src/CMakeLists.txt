@@ -17,7 +17,8 @@ target_link_directories(Pathfinder
 )
 
 TARGET_LINK_LIBRARIES(Pathfinder
-	PUBLIC DynRPG
+	PUBLIC debug DynRPGd
+	PUBLIC optimized DynRPG
 )
 
 target_include_directories(Pathfinder
