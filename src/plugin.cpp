@@ -4,9 +4,6 @@
 
 // ToDo: Clear the globalPathManager object on map change
 
-#include "Simple-Graph/Searcher.hpp"
-#include "Simple-Utility/container/Vector2d.hpp"
-
 #include <DynRPG/DynRPG.h>
 #include <cassert>
 #include <iostream>
@@ -14,146 +11,9 @@
 #include <stdexcept>
 #include <charconv>
 #include <locale>
-#include <unordered_map>
 
 #include "Vector.hpp"
-
-bool is_valid_pos(const Vector& _at)
-{
-	assert(RPG::map);
-	auto& map = *RPG::map;
-	return 0 <= _at.x && _at.x < map.getWidth() &&
-		0 <= _at.y && _at.y < map.getHeight();
-}
-
-using Path = std::vector<Vector>;
-
-class PathManager
-{
-public:
-	const Path* find_path(int _id) const
-	{
-		if (auto itr = m_Paths.find(_id); itr != std::end(m_Paths))
-			return &itr->second;
-		return nullptr;
-	}
-
-	int insert_path(Path _path)
-	{
-		auto id = m_NextId++;
-		m_Paths.emplace(id, std::move(_path));
-		return id;
-	}
-
-	void clear_path(int _id)
-	{
-		if (auto itr = m_Paths.find(_id); itr != std::end(m_Paths))
-			m_Paths.erase(itr);
-	}
-	
-	void clear()
-	{
-		m_Paths.clear();
-		m_NextId = 1;
-	}
-
-private:
-	int m_NextId = 1;
-	std::unordered_map<int, Path> m_Paths;
-};
-
-inline static PathManager globalPathMgr;
-
-class CostCalculator
-{
-public:
-	void set_cost(int _terrain_id, int _cost)
-	{
-		m_CostMap.insert_or_assign(_terrain_id, _cost);
-	}
-	
-	void reset_cost(int _terrain_id)
-	{
-		if (auto itr = m_CostMap.find(_terrain_id); itr != std::end(m_CostMap))
-			m_CostMap.erase(itr);
-	}
-	
-	int get_cost(int _terrain_id) const
-	{
-		if (auto itr = m_CostMap.find(_terrain_id); itr != std::end(m_CostMap))
-			return itr->second;
-		return _terrain_id;
-	}
-	
-	void clear()
-	{
-		m_CostMap.clear();
-	}
-
-private:
-	std::unordered_map<int, int> m_CostMap;
-};
-
-inline static CostCalculator globalCostCalculator;
-
-class Pathfinder
-{
-public:
-	std::optional<int> calc_path(const Vector& _end, RPG::Character& _character)
-	{
-		Vector start{ _character.x, _character.y };
-
-		struct VectorLess
-		{
-			bool operator ()(const Vector& _lhs, const Vector& _rhs) const
-			{
-				return _lhs.x < _rhs.x || (_lhs.x == _rhs.x && _lhs.y < _rhs.y);
-			}
-		};
-
-		auto costCalculator = [](const Vector& _prevPos, const Vector& _pos)
-		{
-			auto tileId = RPG::map->getLowerLayerTileId(_pos.x, _pos.y);
-			return globalCostCalculator.get_cost(RPG::map->getTerrainId(tileId));
-		};
-		
-		auto heuristicCalculator = [](const Vector& _prevPos, const Vector& _pos)
-		{
-			auto diff = _pos - _prevPos;
-			return diff.x + diff.y;
-		};
-		auto searcher = sl::graph::make_astar_searcher<Vector>(costCalculator, heuristicCalculator);
-		using Searcher_t = decltype(searcher);
-		using Map_t = std::map<typename Searcher_t::VertexType, typename Searcher_t::NodeDataType, VectorLess>;
-		using NodeMap = sl::graph::NodeMap<Map_t>;
-
-
-		auto neighbourSearcher = [&_character](const auto& _node, auto&& _callback)
-		{
-			for (int i = 0; i < 4; ++i)
-			{
-				Vector dir{ 0, 0 };
-				switch (i)
-				{
-				case 0: dir.x = 1; break;
-				case 1: dir.x = -1; break;
-				case 2: dir.y = 1; break;
-				case 3: dir.y = -1; break;
-				}
-				auto at = _node.vertex + dir;
-				if (is_valid_pos(at) && _character.isMovePossible(_node.vertex.x, _node.vertex.y, at.x, at.y))
-					_callback(at);
-			}
-		};
-
-		if (auto path = sl::graph::find_path(start, _end, neighbourSearcher, searcher, NodeMap(Map_t(VectorLess())), NodeMap(Map_t(VectorLess()))))
-			return globalPathMgr.insert_path(std::move(*path));
-		return std::nullopt;
-	}
-	
-private:
-	
-};
+#include "Pathfinding.hpp"
 
 struct RPGVariable
 {
