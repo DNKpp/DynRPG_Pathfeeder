@@ -237,6 +237,15 @@ void cmd_set_terrain_cost(const char* _text, const RPG::ParsedCommentData* _pars
 	globalCostCalculator.set_cost(id, cost);
 }
 
+void cmd_set_terrain_cost_var(const char* _text, const RPG::ParsedCommentData* _parsedData)
+{
+	auto& params = _parsedData->parameters;
+	auto id = Param::get_integer(params[0]).value();
+	auto& var = RPGVariable::get(Param::get_integer(params[1]).value());
+
+	globalCostCalculator.set_cost_var(id, var);
+}
+
 void cmd_get_terrain_cost(const char* _text, const RPG::ParsedCommentData* _parsedData)
 {
 	auto& params = _parsedData->parameters;
@@ -287,6 +296,11 @@ bool onComment(const char* _text, const RPG::ParsedCommentData* _parsedData, RPG
 	else if (cmd == "pathfeeder_set_terrain_cost")
 	{
 		cmd_set_terrain_cost(_text, _parsedData);
+		return false;
+	}
+	else if (cmd == "pathfeeder_set_terrain_cost_var")
+	{
+		cmd_set_terrain_cost_var(_text, _parsedData);
 		return false;
 	}
 	else if (cmd == "pathfeeder_reset_terrain_cost")

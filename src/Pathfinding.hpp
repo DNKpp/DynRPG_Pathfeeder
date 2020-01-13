@@ -6,6 +6,9 @@
 
 #include <DynRPG/DynRPG.h>
 
+#include <cassert>
+#include <variant>
+
 using Path = std::vector<Vector>;
 
 template <class TData>
@@ -77,9 +80,15 @@ inline static PathManager globalPathMgr;
 class CostCalculator
 {
 public:
+	using data_type = std::variant<int, const int*>;
 	void set_cost(int _terrain_id, int _cost)
 	{
-		m_CostMap.insert_or_assign(IdData<int>{_terrain_id, _cost});
+		m_CostMap.insert_or_assign(IdData<data_type>{_terrain_id, _cost});
+	}
+
+	void set_cost_var(int _terrain_id, const int& _var)
+	{
+		m_CostMap.insert_or_assign(IdData<data_type>{_terrain_id, &_var});
 	}
 	
 	void reset_cost(int _terrain_id)
@@ -90,8 +99,21 @@ public:
 	
 	int get_cost(int _terrain_id) const
 	{
+		struct _Helper
+		{
+			int operator ()(int _value) const
+			{
+				return _value;
+			}
+
+			int operator ()(const int* _ptr) const
+			{
+				assert(_ptr);
+				return *_ptr;
+			}
+		};
 		if (auto itr = m_CostMap.find(_terrain_id); itr != std::end(m_CostMap))
-			return std::get<1>(*itr);
+			return std::visit(_Helper(), std::get<1>(*itr));
 		return _terrain_id;
 	}
 	
@@ -101,7 +123,7 @@ public:
 	}
 
 private:
-	IdDataSortedVector<int> m_CostMap;
+	IdDataSortedVector<data_type> m_CostMap;
 };
 
 inline static CostCalculator globalCostCalculator;

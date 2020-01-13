@@ -89,7 +89,17 @@
 	\details The cost for the specified terrain will be used for future path finding tasks. It will be cached internally until you reset the specific terrain or clear everything.
 
 	@param in_terrain_id Accepts value as plain number (1, 02, 500, ...) or as variable (v1, vV2, V3, ...). Identifies the terrain id the cost will be used for.
-	@param in_terrain_id Accepts value as plain number (1, 02, 500, ...) or as variable (v1, vV2, V3, ...). This will be used as cost of the given terrain id.
+	@param in_cost Accepts value as plain number (1, 02, 500, ...) or as variable (v1, vV2, V3, ...). This will be used as cost of the given terrain id.
+
+
+	\subsubsection set_terrain_cost_var Set Terrain Cost Var
+	\code @pathfeeder_set_terrain_cost_var in_terrain_id, in_var_id
+	\endcode
+
+	\details The RPG::variable id value will be used as dynamical cost for the specified terrain for future path finding tasks.
+
+	@param in_terrain_id Accepts value as plain number (1, 02, 500, ...) or as variable (v1, vV2, V3, ...). Identifies the terrain id the cost will be used for.
+	@param in_var_id Accepts value as plain number (1, 02, 500, ...) or as variable (v1, vV2, V3, ...). This will be used as an id to a RPG::variable, which holds the cost of the given terrain id.
 
 
 	\subsubsection reset_terrain_cost Reset Terrain Cost
