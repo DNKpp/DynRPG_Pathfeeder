@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include <charconv>
 #include <locale>
+#include <sstream>
 
 #include "Vector.hpp"
 #include "Pathfinding.hpp"
@@ -241,7 +242,7 @@ void cmd_set_terrain_cost_var(const char* _text, const RPG::ParsedCommentData* _
 {
 	auto& params = _parsedData->parameters;
 	auto id = Param::get_integer(params[0]).value();
-	auto& var = RPGVariable::get(Param::get_integer(params[1]).value());
+	auto var = Param::get_integer(params[1]).value();
 
 	globalCostCalculator.set_cost_var(id, var);
 }
@@ -340,4 +341,76 @@ bool onEventCommand(RPG::EventScriptLine* _scriptLine, RPG::EventScriptData* _sc
 	default: break;
 	}
 	return true;
+}
+
+/*template <class T>
+class ArrayView
+{
+public:
+	using value_type				= T;
+	using size_type					= std::size_t;
+    using difference_type			= std::ptrdiff_t;
+    using reference					= T&;
+    using const_reference			= const T&;
+    using pointer					= T*;
+    using const_pointer				= const T*;
+    using iterator					= typename TContainer::iterator;
+    using const_iterator			= typename TContainer::const_iterator;
+    using reverse_iterator			= typename TContainer::reverse_iterator;
+    using const_reverse_iterator	= typename TContainer::const_reverse_iterator;
+	
+	ArrayView(T* _dataPtr, int _length) :
+		m_DataPtr{ _dataPtr },
+		m_Length{ _length }
+	{
+	}
+
+    reference operator[](size_type n)
+	{
+		assert(m_Length <= _at);
+		return m_DataPtr[_at];	
+	}
+	
+    constexpr const_reference operator[](size_type n) const;
+    constexpr const_reference at(size_type n) const;
+    constexpr reference       at(size_type n);
+    constexpr reference       front();
+    constexpr const_reference front() const;
+    constexpr reference       back();
+    constexpr const_reference back() const;
+
+
+private:
+	T* m_DataPtr;
+	int m_Length;
+};*/
+
+void onLoadGame(int _id, char* _data, int _length)
+{
+	// thanks to https://stackoverflow.com/a/1449527/4691843
+	struct OneShotReadBuf : public std::streambuf
+	{
+	    OneShotReadBuf(char* s, std::size_t n)
+	    {
+	        setg(s, s, s + n);
+	    }
+	};
+	OneShotReadBuf buffer(_data, _length);
+	std::istream in(&buffer);
+	in >>globalCostCalculator;
+
+	globalPathMgr.clear();
+}
+
+void onSaveGame(int id, void __cdecl(*savePluginData)(char*data, int length))
+{
+	std::ostringstream out(std::ios_base::out | std::ios_base::binary);
+	out << globalCostCalculator;
+	savePluginData(out.str().data(), std::size(out.str()));
+}
+
+void onNewGame()
+{
+	globalCostCalculator.clear();
+	globalPathMgr.clear();
 }

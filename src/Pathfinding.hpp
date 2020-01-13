@@ -80,15 +80,17 @@ inline static PathManager globalPathMgr;
 class CostCalculator
 {
 public:
-	using data_type = std::variant<int, const int*>;
+	using data_type = int;
 	void set_cost(int _terrain_id, int _cost)
 	{
-		m_CostMap.insert_or_assign(IdData<data_type>{_terrain_id, _cost});
+		if (0 < _cost)
+			m_CostMap.insert_or_assign(IdData<data_type>{_terrain_id, _cost});
 	}
 
-	void set_cost_var(int _terrain_id, const int& _var)
+	void set_cost_var(int _terrain_id, int _id)
 	{
-		m_CostMap.insert_or_assign(IdData<data_type>{_terrain_id, &_var});
+		if (0 < _id)
+			m_CostMap.insert_or_assign(IdData<data_type>{_terrain_id, -_id});
 	}
 	
 	void reset_cost(int _terrain_id)
@@ -99,21 +101,13 @@ public:
 	
 	int get_cost(int _terrain_id) const
 	{
-		struct _Helper
-		{
-			int operator ()(int _value) const
-			{
-				return _value;
-			}
-
-			int operator ()(const int* _ptr) const
-			{
-				assert(_ptr);
-				return *_ptr;
-			}
-		};
 		if (auto itr = m_CostMap.find(_terrain_id); itr != std::end(m_CostMap))
-			return std::visit(_Helper(), std::get<1>(*itr));
+		{
+			auto value = std::get<1>(*itr);
+			if (value < 0)
+				return RPG::system->variables[-value];
+			return value;
+		}
 		return _terrain_id;
 	}
 	
@@ -122,6 +116,34 @@ public:
 		m_CostMap.clear();
 	}
 
+	friend std::ostream& operator <<(std::ostream& _out, const CostCalculator& _obj)
+	{
+		auto& data = _obj.m_CostMap;
+		_out << std::size(data) << " ";
+		std::for_each(std::begin(data), std::end(data),
+			[&_out](const auto& _el) { _out << std::get<0>(_el) << " " << std::get<1>(_el) << " "; }	
+		);
+		return _out;
+	}
+
+	friend std::istream& operator >>(std::istream& _in, CostCalculator& _obj)
+	{
+		auto& data = _obj.m_CostMap;
+		data.clear();
+		std::size_t size = 0;
+		_in >> size;
+		data.reserve(size);
+
+		for (std::size_t i = 0; i < size; ++i)
+		{
+			int id;
+			int val;
+			_in >> id >> val;
+			data.insert(IdData<data_type>{id, val});
+		}
+		return _in;
+	}
+	
 private:
 	IdDataSortedVector<data_type> m_CostMap;
 };
