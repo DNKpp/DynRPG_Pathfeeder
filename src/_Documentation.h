@@ -30,7 +30,7 @@
 	\subsection Interface
 
 	\subsubsection find_path Find Path
-	\code @find_path in_target, in_x, in_y out_path_id, out_s_success
+	\code @pathfeeder_find_path in_target, in_x, in_y out_path_id, out_s_success
 	\endcode
 
 	\details This function is used to calculate the path from an event to a specific destination (x- and y-coordinate). The cost for each step is determined by the terrain id. To manipulate this cost look at the terrain_cost functions.
@@ -45,7 +45,7 @@
 
 
 	\subsubsection get_path_length Get Path Length
-	\code @get_path_length in_path_id, out_path_length, out_s_success
+	\code @pathfeeder_get_path_length in_path_id, out_path_length, out_s_success
 	\endcode
 
 	\details Each path consists of several vertices (the map tiles). This function returns, how many of those tiles are included in this path (inclusive start and end tile).
@@ -58,7 +58,7 @@
 
 
 	\subsubsection get_path_vertex Get Path vertex
-	\code @get_path_vertex in_path_id, in_vertex_index, out_vertex_x, out_vertex_y, out_s_success
+	\code @pathfeeder_get_path_vertex in_path_id, in_vertex_index, out_vertex_x, out_vertex_y, out_s_success
 	\endcode
 
 	\details This function returns information about one specific vertex. To get the right one, you have to determine which path you want to look at. Each path consists of several vertices (the map tiles), thus you have to tell the plugin
@@ -74,7 +74,7 @@
 
 
 	\subsubsection clear_path Clear Path
-	\code @clear_path in_path_id
+	\code @pathfeeder_clear_path in_path_id
 	\endcode
 
 	@param in_path_id Accepts path ids as plain number (1, 02, 500, ...) or as variable (v1, vV2, V3, ...). Identifies the path.
@@ -83,7 +83,7 @@
 
 
 	\subsubsection set_terrain_cost Set Terrain Cost
-	\code @set_terrain_cost in_terrain_id, in_cost
+	\code @pathfeeder_set_terrain_cost in_terrain_id, in_cost
 	\endcode
 
 	\details The cost for the specified terrain will be used for future path finding tasks. It will be cached internally until you reset the specific terrain or clear everything.
@@ -93,7 +93,7 @@
 
 
 	\subsubsection reset_terrain_cost Reset Terrain Cost
-	\code @reset_terrain_cost in_terrain_id
+	\code @pathfeeder_reset_terrain_cost in_terrain_id
 	\endcode
 
 	\details The cost for the specified terrain will be reset to default (terrain id as cost).
@@ -102,14 +102,14 @@
 
 
 	\subsubsection clear_terrain_costs Clear Terrain Costs
-	\code @clear_terrain_costs
+	\code @pathfeeder_clear_terrain_costs
 	\endcode
 
 	\details Clears every cached cost value.
 
 
 	\subsubsection get_terrain_cost Get Terrain Cost
-	\code @get_terrain_cost in_terrain_id, out_cost
+	\code @pathfeeder_get_terrain_cost in_terrain_id, out_cost
 	\endcode
 
 	\details Returns the current cached terrain cost into the RPG::variable with the specified id.

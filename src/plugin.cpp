@@ -264,42 +264,42 @@ bool onComment(const char* _text, const RPG::ParsedCommentData* _parsedData, RPG
 	RPG::EventScriptData* _scriptData, int _eventId, int _pageId, int _lineId, int* _nextLineId)
 {
 	std::string_view cmd{ _parsedData->command };
-	if (cmd == "find_path")
+	if (cmd == "pathfeeder_find_path")
 	{
 		cmd_find_path(_text, _parsedData);
 		return false;
 	}
-	else if (cmd == "get_path_length")
+	else if (cmd == "pathfeeder_get_path_length")
 	{
 		cmd_get_path_length(_text, _parsedData);
 		return false;
 	}
-	else if (cmd == "get_path_vertex")
+	else if (cmd == "pathfeeder_get_path_vertex")
 	{
 		cmd_get_path_vertex(_text, _parsedData);
 		return false;
 	}
-	else if (cmd == "clear_path")
+	else if (cmd == "pathfeeder_clear_path")
 	{
 		cmd_clear_path(_text, _parsedData);
 		return false;
 	}
-	else if (cmd == "set_terrain_cost")
+	else if (cmd == "pathfeeder_set_terrain_cost")
 	{
 		cmd_set_terrain_cost(_text, _parsedData);
 		return false;
 	}
-	else if (cmd == "reset_terrain_cost")
+	else if (cmd == "pathfeeder_reset_terrain_cost")
 	{
 		cmd_reset_terrain_cost(_text, _parsedData);
 		return false;
 	}
-	else if (cmd == "get_terrain_cost")
+	else if (cmd == "pathfeeder_get_terrain_cost")
 	{
 		cmd_get_terrain_cost(_text, _parsedData);
 		return false;
 	}
-	else if (cmd == "clear_terrain_costs")
+	else if (cmd == "pathfeeder_clear_terrain_costs")
 	{
 		cmd_clear_terrain_costs(_text, _parsedData);
 		return false;
