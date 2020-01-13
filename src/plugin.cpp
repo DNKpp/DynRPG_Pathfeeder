@@ -320,3 +320,24 @@ bool onComment(const char* _text, const RPG::ParsedCommentData* _parsedData, RPG
 	}
 	return true;
 }
+
+bool onEventCommand(RPG::EventScriptLine* _scriptLine, RPG::EventScriptData* _scriptData, int _eventId, int _pageId, int _lineId, int* _nextLineId)
+{
+	switch (_scriptLine->command)
+	{
+	case RPG::EVCMD_TELEPORT:
+	{
+		/*
+		 * 0 = mapId
+		 * 1 = x
+		 * 2 = y
+		 * 3 = facing (0 = retain)
+		 */
+		auto& params = _scriptLine->parameters;
+		if (RPG::Map::properties->id != params[0])
+			globalPathMgr.clear();
+	}
+	default: break;
+	}
+	return true;
+}
