@@ -154,6 +154,16 @@
 
 	<hr>
 
+	\subsection ini_layout Ini Layout
+	An .ini file consists of multiple section elements and multiple subordinated key/value pairs. The section name <b>pathfeeder</b> is reserved by this plugin. You configure the costs for your terrain ids, treat the ids as key and
+	the costs as values. You can also refer to a variable cost, all you have to do is to use a negative value (which will be treated internally as absolute id).
+
+	\code
+	[pathfeeder]
+		5=10	// terrain id 5 has cost of 10
+		6=-5	// terrain id 6 will use the value of RPG::variable id 5 as cost
+	\endcode
+
 
 	\subsection technical_details Technical Details
 	Due to the antique version of the gcc used by all the other plugins I tried my best to get around this. To be honest gcc was a pain to me, so I tried 2 other compilers: msvc and clang. Due to the different asm syntax I wasn't able to compile
