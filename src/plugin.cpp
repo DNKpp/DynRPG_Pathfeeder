@@ -413,4 +413,19 @@ void onNewGame()
 {
 	globalCostCalculator.clear();
 	globalPathMgr.clear();
+	
+	for (auto&[key, strValue] : RPG::loadConfiguration(const_cast<char*>("pathfeeder")))	// parameter won't get modified internally; doesn't seem to be non-const on purpose
+	{
+		try
+		{
+			auto id = std::stoi(key);
+			auto value = std::stoi(strValue);
+			if (value < 0)
+				globalCostCalculator.set_cost_var(id, -value);
+			else
+				globalCostCalculator.set_cost(id, value);
+		}
+		catch (const std::invalid_argument&)
+		{}
+	}
 }
