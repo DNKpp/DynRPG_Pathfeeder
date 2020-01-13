@@ -8,6 +8,9 @@
 
 #include <cassert>
 #include <variant>
+#include <algorithm>
+
+#undef max		// lol
 
 using Path = std::vector<Vector>;
 
@@ -105,7 +108,7 @@ public:
 		{
 			auto value = std::get<1>(*itr);
 			if (value < 0)
-				return RPG::system->variables[-value];
+				return std::max(0, RPG::system->variables[-value]);
 			return value;
 		}
 		return _terrain_id;
