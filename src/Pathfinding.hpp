@@ -9,6 +9,7 @@
 #include <cassert>
 #include <variant>
 #include <algorithm>
+#include <chrono>
 
 #undef max		// lol
 
@@ -233,13 +234,8 @@ public:
 	template <class TNodeCompare>
 	void insert(const node_type& _node, TNodeCompare&& _nodeComp)
 	{
-		if (auto itr = m_Nodes.find(_node); itr != std::end(m_Nodes))
-		{
-			if (_nodeComp(_node.data, itr->data))
-				itr->data = _node.data;
-		}
-		else
-			m_Nodes.insert(_node);
+		if (auto [itr, result] = m_Nodes.insert(_node); !result && _nodeComp(_node.data, itr->data))
+			itr->data = _node.data;
 	}
 
 	template <class TNodeCompare>
@@ -307,10 +303,10 @@ public:
 			return globalCostCalculator.get_cost(RPG::map->getTerrainId(tileId));
 		};
 		
-		auto heuristicCalculator = [](const Vector& _prevPos, const Vector& _pos)
+		auto heuristicCalculator = [&_end](const Vector& _prevPos, const Vector& _pos)
 		{
-			auto diff = _pos - _prevPos;
-			return diff.x + diff.y;
+			auto diff = _end - _pos;
+			return std::abs(diff.x) + std::abs(diff.y);
 		};
 		auto searcher = sl::graph::make_astar_searcher<Vector>(costCalculator, heuristicCalculator);
 		using Searcher_t = decltype(searcher);
@@ -335,8 +331,12 @@ public:
 			}
 		};
 
+		auto begin = std::chrono::steady_clock::now();
 		if (auto path = sl::graph::find_path(start, _end, neighbourSearcher, searcher, NodeList<Searcher_t>(), NodeMap<Searcher_t>(RPG::map->getWidth(), RPG::map->getHeight())))
+		{
+			auto diff = std::chrono::steady_clock::now() - begin;
 			return globalPathMgr.insert_path(std::move(*path));
+		}
 		return std::nullopt;
 	}
 	
