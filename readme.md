@@ -7,7 +7,7 @@ Dominic "DNKpp" Koepke
 Documentation edited by Tor_Heyerdal
 
 #### Download:
-
+https://drive.google.com/open?id=1QUdEN8cP1tuUf4Y6wYeFs3sjN4ZHEWtO
 
 #### Source:
 The complete source code is available at:
@@ -168,8 +168,8 @@ Returns the current cached terrain cost into the RPG::variable with the specifie
 An .ini file consists of multiple section elements and multiple subordinated key/value pairs. The section name "pathfeeder" is reserved by this plugin. You can configure the costs for your terrain IDs here. Treat the IDs as keys and the costs as values. You can also refer a value to a variable cost. All you have to do is to use a negative value (which will be treated internally as absolute ID).
 
 	[pathfeeder]
-	5=10	// terrain ID 5 has cost of 10
-	6=-5	// terrain ID 6 will use the value of RPG::variable ID 5 as cost
+		5=10	// terrain ID 5 has cost of 10
+		6=-5	// terrain ID 6 will use the value of RPG::variable ID 5 as cost
 
 
 ### Technical Details:
