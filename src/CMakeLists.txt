@@ -31,4 +31,7 @@ add_custom_command(TARGET Pathfinder
 	COMMAND ${CMAKE_COMMAND} -E copy
 		${Pathfinder_BINARY_DIR}/Pathfinder.dll
 		${CMAKE_CURRENT_SOURCE_DIR}/../TestGame/DynPlugins
+	COMMAND ${CMAKE_COMMAND} -E copy
+		${Pathfinder_BINARY_DIR}/Pathfinder.dll
+		${CMAKE_CURRENT_SOURCE_DIR}/../ExampleGame/DynPlugins
 )
