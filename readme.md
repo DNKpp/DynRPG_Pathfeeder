@@ -11,7 +11,7 @@ https://drive.google.com/open?id=1QUdEN8cP1tuUf4Y6wYeFs3sjN4ZHEWtO
 
 #### Source:
 The complete source code is available at:
-https://github.com/DNKpp/DynRPG_Pathfinder
+https://github.com/DNKpp/DynRPG_Pathfeeder
 
 ## Introduction:
 This is a plugin written for DynRPG 0.32. It is not possible to use it with previous versions, like DynRPG 0.20, because the plugin makes heavy usage of functions which were introduced later on. Unlike my previous pathfinder plugin, this plugin does not move any characters itself. You have to handle the movement yourself. The plugin just hands over the information that you'll need.
