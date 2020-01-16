@@ -20,12 +20,11 @@ This is a plugin written for DynRPG 0.32. It is not possible to use it with prev
 ## Documentation:
 Before we start with the function documentation itself, please read the following guidelines first:
 
-<ul><li>Parameters starting with in_... hand over information to the function for the plugin to use.</li>
-<li>Parameters starting with out_... retrieve information from the plugin and feed it to the RM2k3 environment. Those "out" values simply refer to internal variables or switches of RM2k3 via index (e.g. if you pass 3 to a parameter called "out_id", the variable with index 3 (ie, var[0003]) in RM2k3 will be set).</li>
-<li>Some parameters will have a clamped ..._s_... in their name. This indicates that this parameter refers to a switch instead of a variable.</li>
-<li>When any of these functions have a parameter named "out_s_success", they are able to fail. When referring to any other "out" variable of that function, you **must** check the success switch first to be sure that you will receive valid values. The success switch is the only parameter which will be set to either true or false. If the function fails, any other "out" parameter won't be touched and the function will abort.</li>
-<li>Most (if not all) parameters of the functions in this plugin are integers. To save some space and keep the documentation clean, please keep in mind that you are able to either pass a plain value (like 1, 2, -2, ...) or an indirect value through an RPG::variable (v1 refers to the RPG::variable with ID 1; v2 to ID 2; etc.). You are able to chain those leading "v" prefixes, thus you are able to perform multiple indirections (vv1 looks into variable 1 and uses its value as the final ID). It is important to keep in mind that, unless stated otherwise, IDs start at 1 (not 0).
-</ul>
+* Parameters starting with `in_...` hand over information to the function for the plugin to use.
+* Parameters starting with `out_...` retrieve information from the plugin and feed it to the RM2k3 environment. Those `out` values simply refer to internal variables or switches of RM2k3 via index (e.g. if you pass 3 to a parameter called `out_id`, the variable with index 3 (ie, var[0003]) in RM2k3 will be set).
+* Some parameters will have a clamped `..._s_...` in their name. This indicates that this parameter refers to a switch instead of a variable.
+* When any of these functions have a parameter named `out_s_success`, they are able to fail. When referring to any other `out...` variable of that function, you **must** check the success switch first to be sure that you will receive valid values. The success switch is the only parameter which will be set to either true or false. If the function fails, any other "out" parameter won't be touched and the function will abort.
+* Most (if not all) parameters of the functions in this plugin are integers. To save some space and keep the documentation clean, please keep in mind that you are able to either pass a plain value (like 1, 2, -2, ...) or an indirect value through an RPG::variable (v1 refers to the RPG::variable with ID 1; v2 to ID 2; etc.). You are able to chain those leading `v` prefixes, thus you are able to perform multiple indirections (vv1 looks into variable 1 and uses its value as the final ID). It is important to keep in mind that, unless stated otherwise, IDs start at 1 (not 0).
 
 ### Concept:
 This plugin consists of two parts: the configuration and the "pathfeeding".
