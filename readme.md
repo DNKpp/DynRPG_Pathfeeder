@@ -165,11 +165,11 @@ Returns the current cached terrain cost into the RPG::variable with the specifie
 
 ### Ini Layout:
 An .ini file consists of multiple section elements and multiple subordinated key/value pairs. The section name "pathfeeder" is reserved by this plugin. You can configure the costs for your terrain IDs here. Treat the IDs as keys and the costs as values. You can also refer a value to a variable cost. All you have to do is to use a negative value (which will be treated internally as absolute ID).
-
-	[pathfeeder]
-		5=10	// terrain ID 5 has cost of 10
-		6=-5	// terrain ID 6 will use the value of RPG::variable ID 5 as cost
-
+```ini
+[pathfeeder]
+	5=10	// terrain ID 5 has cost of 10
+	6=-5	// terrain ID 6 will use the value of RPG::variable ID 5 as cost
+```
 
 ### Technical Details:
 The version of the GCC which is used by all the other plugins is very antique. I tried my best to get around this. To be honest, I've found GCC to be a pain. So I tried 2 other compilers: MSVC and Clang. Due to the different ASM syntax, I wasn't able to compile the library with MSVC, but Clang did the job. As a result, I was able to update the C++ version to C++17, which offers some huge conveniences. After some progress, I realized that Clang's optimizer was too aggressive and outright kicked some code from the binary, because it thought it wasn't necessary. But I was finally able to tell it via compiler flag /Oy- to be more patient, and now it seems fine. But, just in case, if you encounter anything weird, please don't hesitate to contact me.
