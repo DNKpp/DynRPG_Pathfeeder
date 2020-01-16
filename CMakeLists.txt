@@ -5,7 +5,7 @@
 #set(CMAKE_CXX_COMPILER "g++")
 # THIS HAS TO COME BEFORE THE PROJECT LINE
 
-project(DynRPG_Pathfinder LANGUAGES C CXX)
+project(DynRPG_Pathfeeder LANGUAGES C CXX)
 
 #enable_testing()
 

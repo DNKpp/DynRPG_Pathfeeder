@@ -165,6 +165,8 @@ private:
 
 void cmd_find_path(const char* _text, const RPG::ParsedCommentData* _parsedData)
 {
+	auto begin = std::chrono::steady_clock::now();
+	
 	auto& params = _parsedData->parameters;
 	auto& outSuccess = RPGSwitch::get(Param::get_integer(params[4]).value());
 	outSuccess = false;
@@ -181,6 +183,9 @@ void cmd_find_path(const char* _text, const RPG::ParsedCommentData* _parsedData)
 			outSuccess = true;
 		}
 	}
+
+	auto diff = std::chrono::steady_clock::now() - begin;
+	RPG::variables[50] = diff.count() / 1000;
 }
 
 void cmd_get_path_length(const char* _text, const RPG::ParsedCommentData* _parsedData)

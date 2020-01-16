@@ -300,7 +300,8 @@ public:
 		auto costCalculator = [](const Vector& _prevPos, const Vector& _pos)
 		{
 			auto tileId = RPG::map->getLowerLayerTileId(_pos.x, _pos.y);
-			return globalCostCalculator.get_cost(RPG::map->getTerrainId(tileId));
+			//return globalCostCalculator.get_cost(RPG::map->getTerrainId(tileId));
+			return RPG::map->getTerrainId(tileId);
 		};
 		
 		auto heuristicCalculator = [&_end](const Vector& _prevPos, const Vector& _pos)
@@ -331,10 +332,8 @@ public:
 			}
 		};
 
-		auto begin = std::chrono::steady_clock::now();
 		if (auto path = sl::graph::find_path(start, _end, neighbourSearcher, searcher, NodeList<Searcher_t>(), NodeMap<Searcher_t>(RPG::map->getWidth(), RPG::map->getHeight())))
 		{
-			auto diff = std::chrono::steady_clock::now() - begin;
 			return globalPathMgr.insert_path(std::move(*path));
 		}
 		return std::nullopt;
