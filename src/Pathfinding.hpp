@@ -152,7 +152,110 @@ private:
 	IdDataSortedVector<data_type> m_CostMap;
 };
 
+class EdgeCostCalculator
+{
+public:
+	using CostKey = std::pair<int, int>;
+
+	struct Cost
+	{
+		CostKey key;
+		int cost;
+	};
+
+	struct CostKeyLess
+	{
+		bool operator ()(const CostKey& _lhs, const CostKey& _rhs) const
+		{
+			return _lhs.first < _rhs.first ||
+				(_lhs.first == _rhs.first && _lhs.second < _rhs.second);
+		}
+		
+		bool operator ()(const Cost& _lhs, const Cost& _rhs) const
+		{
+			return (*this)(_lhs.key, _rhs.key);
+		}
+
+		bool operator ()(const Cost& _lhs, const CostKey& _rhs) const
+		{
+			return (*this)(_lhs.key, _rhs);
+		}
+
+		bool operator ()(const CostKey& _lhs, const Cost& _rhs) const
+		{
+			return (*this)(_lhs, _rhs.key);
+		}
+	};
+	
+	void set_cost(int _from_terrain_id, int _to_terrain_id, int _cost)
+	{
+		if (0 < _cost)
+			m_Costs.insert_or_assign(Cost{ { _from_terrain_id, _to_terrain_id }, _cost });
+	}
+
+	void set_cost_var(int _from_terrain_id, int _to_terrain_id, int _id)
+	{
+		if (0 < _id)
+			m_Costs.insert_or_assign(Cost{ { _from_terrain_id, _to_terrain_id }, -_id });
+	}
+	
+	void reset_cost(int _from_terrain_id, int _to_terrain_id)
+	{
+		if (auto itr = m_Costs.find(CostKey{ _from_terrain_id, _to_terrain_id }); itr != std::end(m_Costs))
+			m_Costs.erase(itr);
+	}
+	
+	int get_cost(int _from_terrain_id, int _to_terrain_id) const
+	{
+		if (auto itr = m_Costs.find(CostKey{ _from_terrain_id, _to_terrain_id }); itr != std::end(m_Costs))
+		{
+			auto value = itr->cost;
+			if (value < 0)
+				return std::max(0, RPG::system->variables[-value]);
+			return std::max(0, value);
+		}
+		return 0;
+	}
+	
+	void clear()
+	{
+		m_Costs.clear();
+	}
+
+	//friend std::ostream& operator <<(std::ostream& _out, const CostCalculator& _obj)
+	//{
+	//	auto& data = _obj.m_CostMap;
+	//	_out << std::size(data) << " ";
+	//	std::for_each(std::begin(data), std::end(data),
+	//		[&_out](const auto& _el) { _out << std::get<0>(_el) << " " << std::get<1>(_el) << " "; }	
+	//	);
+	//	return _out;
+	//}
+
+	//friend std::istream& operator >>(std::istream& _in, CostCalculator& _obj)
+	//{
+	//	auto& data = _obj.m_CostMap;
+	//	data.clear();
+	//	std::size_t size = 0;
+	//	_in >> size;
+	//	data.reserve(size);
+
+	//	for (std::size_t i = 0; i < size; ++i)
+	//	{
+	//		int id;
+	//		int val;
+	//		_in >> id >> val;
+	//		data.insert(IdData<data_type>{id, val});
+	//	}
+	//	return _in;
+	//}
+	
+private:
+	sl::container::SortedVector<Cost, CostKeyLess> m_Costs;
+};
+
 inline static CostCalculator globalCostCalculator;
+inline static EdgeCostCalculator globalEdgeCostCalculator;
 
 bool is_valid_pos(const Vector& _at)
 {
@@ -181,6 +284,14 @@ public:
 		{
 			auto tileId = RPG::map->getLowerLayerTileId(_pos.x, _pos.y);
 			return globalCostCalculator.get_cost(RPG::map->getTerrainId(tileId));
+			//return RPG::map->getTerrainId(tileId);
+		};
+
+		auto edgeCostCalculator = [](const Vector& _from, const Vector& _to)
+		{
+			auto fromTerrainId = RPG::map->getTerrainId(RPG::map->getLowerLayerTileId(_from.x, _from.y));
+			auto toTerrainId = RPG::map->getTerrainId(RPG::map->getLowerLayerTileId(_to.x, _to.y));
+			return globalEdgeCostCalculator.get_cost(fromTerrainId, toTerrainId);
 			//return RPG::map->getTerrainId(tileId);
 		};
 		
@@ -247,7 +358,7 @@ public:
 		sl::container::SortedVector<Node, NodeVectorLess> closedList;
 		sl::graph::traverse_astar(start, _end, neighbourSearcher,
 			TableVisitationTracker{ static_cast<std::size_t>(RPG::map->getWidth()), static_cast<std::size_t>(RPG::map->getHeight()) },
-			heuristicCalculator, costCalculator, sl::graph::ConstWeight<0>{},
+			heuristicCalculator, costCalculator, edgeCostCalculator,
 			[&closedList](const Node& _node)
 			{
 				closedList.insert(_node);

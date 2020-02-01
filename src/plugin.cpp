@@ -165,7 +165,7 @@ private:
 
 void cmd_find_path(const char* _text, const RPG::ParsedCommentData* _parsedData)
 {
-	auto begin = std::chrono::steady_clock::now();
+	//auto begin = std::chrono::steady_clock::now();
 	
 	auto& params = _parsedData->parameters;
 	auto& outSuccess = RPGSwitch::get(Param::get_integer(params[4]).value());
@@ -184,8 +184,8 @@ void cmd_find_path(const char* _text, const RPG::ParsedCommentData* _parsedData)
 		}
 	}
 
-	auto diff = std::chrono::steady_clock::now() - begin;
-	RPG::variables[50] = diff.count() / 1000;
+	//auto diff = std::chrono::steady_clock::now() - begin;
+	//RPG::variables[50] = diff.count() / 1000;
 }
 
 void cmd_get_path_length(const char* _text, const RPG::ParsedCommentData* _parsedData)
@@ -275,6 +275,51 @@ void cmd_clear_terrain_costs(const char* _text, const RPG::ParsedCommentData* _p
 	globalCostCalculator.clear();
 }
 
+void cmd_set_terrain_travel_cost(const char* _text, const RPG::ParsedCommentData* _parsedData)
+{
+	auto& params = _parsedData->parameters;
+	auto fromId = Param::get_integer(params[0]).value();
+	auto toId = Param::get_integer(params[1]).value();
+	auto cost = Param::get_integer(params[2]).value();
+
+	globalEdgeCostCalculator.set_cost(fromId, toId, cost);
+}
+
+void cmd_set_terrain_travel_cost_var(const char* _text, const RPG::ParsedCommentData* _parsedData)
+{
+	auto& params = _parsedData->parameters;
+	auto fromId = Param::get_integer(params[0]).value();
+	auto toId = Param::get_integer(params[1]).value();
+	auto var = Param::get_integer(params[1]).value();
+
+	globalEdgeCostCalculator.set_cost_var(fromId, toId, var);
+}
+
+void cmd_get_terrain_travel_cost(const char* _text, const RPG::ParsedCommentData* _parsedData)
+{
+	auto& params = _parsedData->parameters;
+	auto fromId = Param::get_integer(params[0]).value();
+	auto toId = Param::get_integer(params[1]).value();
+	auto& outCost = RPGVariable::get(Param::get_integer(params[2]).value());
+
+	outCost = globalEdgeCostCalculator.get_cost(fromId, toId);
+}
+
+void cmd_reset_terrain_travel_cost(const char* _text, const RPG::ParsedCommentData* _parsedData)
+{
+	auto& params = _parsedData->parameters;
+	auto fromId = Param::get_integer(params[0]).value();
+	auto toId = Param::get_integer(params[1]).value();
+
+	globalEdgeCostCalculator.reset_cost(fromId, toId);
+}
+
+void cmd_clear_terrain_travel_costs(const char* _text, const RPG::ParsedCommentData* _parsedData)
+{
+	auto& params = _parsedData->parameters;
+	globalEdgeCostCalculator.clear();
+}
+
 bool onComment(const char* _text, const RPG::ParsedCommentData* _parsedData, RPG::EventScriptLine* _nextScriptLine,
 	RPG::EventScriptData* _scriptData, int _eventId, int _pageId, int _lineId, int* _nextLineId)
 {
@@ -322,6 +367,31 @@ bool onComment(const char* _text, const RPG::ParsedCommentData* _parsedData, RPG
 	else if (cmd == "pathfeeder_clear_terrain_costs")
 	{
 		cmd_clear_terrain_costs(_text, _parsedData);
+		return false;
+	}
+	else if (cmd == "pathfeeder_set_terrain_travel_cost")
+	{
+		cmd_set_terrain_travel_cost(_text, _parsedData);
+		return false;
+	}
+	else if (cmd == "pathfeeder_set_terrain_travel_cost_var")
+	{
+		cmd_set_terrain_travel_cost_var(_text, _parsedData);
+		return false;
+	}
+	else if (cmd == "pathfeeder_reset_terrain_travel_cost")
+	{
+		cmd_reset_terrain_travel_cost(_text, _parsedData);
+		return false;
+	}
+	else if (cmd == "pathfeeder_get_terrain_travel_cost")
+	{
+		cmd_get_terrain_travel_cost(_text, _parsedData);
+		return false;
+	}
+	else if (cmd == "pathfeeder_clear_terrain_travel_costs")
+	{
+		cmd_clear_terrain_travel_costs(_text, _parsedData);
 		return false;
 	}
 	return true;
