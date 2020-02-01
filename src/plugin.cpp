@@ -164,9 +164,18 @@ private:
 	}
 };
 
+struct ParamError : std::runtime_error
+{
+	explicit ParamError(const std::string& _what) : std::runtime_error{ _what } {}
+	explicit ParamError(const char* _what ) : std::runtime_error{ _what } {}
+};
+
 void cmd_find_path(const char* _text, const RPG::ParsedCommentData* _parsedData)
 {
 	//auto begin = std::chrono::steady_clock::now();
+
+	if (_parsedData->parametersCount != 5)
+		throw ParamError("cmd_find_path: Invalid param count.");
 	
 	auto& params = _parsedData->parameters;
 	auto& outSuccess = RPGSwitch::get(Param::get_integer(params[4]).value());
@@ -191,6 +200,9 @@ void cmd_find_path(const char* _text, const RPG::ParsedCommentData* _parsedData)
 
 void cmd_get_path_length(const char* _text, const RPG::ParsedCommentData* _parsedData)
 {
+	if (_parsedData->parametersCount != 3)
+		throw ParamError("cmd_get_path_length: Invalid param count.");
+	
 	auto& params = _parsedData->parameters;
 	auto& outSuccess = RPGSwitch::get(Param::get_integer(params[2]).value());
 	outSuccess = false;
@@ -208,6 +220,9 @@ void cmd_get_path_length(const char* _text, const RPG::ParsedCommentData* _parse
 
 void cmd_get_path_vertex(const char* _text, const RPG::ParsedCommentData* _parsedData)
 {
+	if (_parsedData->parametersCount != 5)
+		throw ParamError("cmd_get_path_vertex: Invalid param count.");
+	
 	auto& params = _parsedData->parameters;
 	auto id = Param::get_integer(params[0]).value();
 	auto index = Param::get_integer(params[1]).value();
@@ -229,6 +244,9 @@ void cmd_get_path_vertex(const char* _text, const RPG::ParsedCommentData* _parse
 
 void cmd_clear_path(const char* _text, const RPG::ParsedCommentData* _parsedData)
 {
+	if (_parsedData->parametersCount != 1)
+		throw ParamError("cmd_clear_path: Invalid param count.");
+	
 	auto& params = _parsedData->parameters;
 	auto id = Param::get_integer(params[0]).value();
 
@@ -237,6 +255,9 @@ void cmd_clear_path(const char* _text, const RPG::ParsedCommentData* _parsedData
 
 void cmd_set_terrain_cost(const char* _text, const RPG::ParsedCommentData* _parsedData)
 {
+	if (_parsedData->parametersCount != 2)
+		throw ParamError("cmd_set_terrain_cost: Invalid param count.");
+	
 	auto& params = _parsedData->parameters;
 	auto id = Param::get_integer(params[0]).value();
 	auto cost = Param::get_integer(params[1]).value();
@@ -246,6 +267,9 @@ void cmd_set_terrain_cost(const char* _text, const RPG::ParsedCommentData* _pars
 
 void cmd_set_terrain_cost_var(const char* _text, const RPG::ParsedCommentData* _parsedData)
 {
+	if (_parsedData->parametersCount != 2)
+		throw ParamError("cmd_set_terrain_cost_var: Invalid param count.");
+	
 	auto& params = _parsedData->parameters;
 	auto id = Param::get_integer(params[0]).value();
 	auto var = Param::get_integer(params[1]).value();
@@ -255,6 +279,9 @@ void cmd_set_terrain_cost_var(const char* _text, const RPG::ParsedCommentData* _
 
 void cmd_get_terrain_cost(const char* _text, const RPG::ParsedCommentData* _parsedData)
 {
+	if (_parsedData->parametersCount != 2)
+		throw ParamError("cmd_get_terrain_cost: Invalid param count.");
+	
 	auto& params = _parsedData->parameters;
 	auto id = Param::get_integer(params[0]).value();
 	auto& outCost = RPGVariable::get(Param::get_integer(params[1]).value());
@@ -264,6 +291,9 @@ void cmd_get_terrain_cost(const char* _text, const RPG::ParsedCommentData* _pars
 
 void cmd_reset_terrain_cost(const char* _text, const RPG::ParsedCommentData* _parsedData)
 {
+	if (_parsedData->parametersCount != 1)
+		throw ParamError("cmd_reset_terrain_cost: Invalid param count.");
+	
 	auto& params = _parsedData->parameters;
 	auto id = Param::get_integer(params[0]).value();
 
@@ -278,6 +308,9 @@ void cmd_clear_terrain_costs(const char* _text, const RPG::ParsedCommentData* _p
 
 void cmd_set_terrain_travel_cost(const char* _text, const RPG::ParsedCommentData* _parsedData)
 {
+	if (_parsedData->parametersCount != 3)
+		throw ParamError("cmd_set_terrain_travel_cost: Invalid param count.");
+	
 	auto& params = _parsedData->parameters;
 	auto fromId = Param::get_integer(params[0]).value();
 	auto toId = Param::get_integer(params[1]).value();
@@ -288,16 +321,22 @@ void cmd_set_terrain_travel_cost(const char* _text, const RPG::ParsedCommentData
 
 void cmd_set_terrain_travel_cost_var(const char* _text, const RPG::ParsedCommentData* _parsedData)
 {
+	if (_parsedData->parametersCount != 3)
+		throw ParamError("cmd_set_terrain_travel_cost_var: Invalid param count.");
+	
 	auto& params = _parsedData->parameters;
 	auto fromId = Param::get_integer(params[0]).value();
 	auto toId = Param::get_integer(params[1]).value();
-	auto var = Param::get_integer(params[1]).value();
+	auto var = Param::get_integer(params[2]).value();
 
 	globalEdgeCostCalculator.set_cost_var(fromId, toId, var);
 }
 
 void cmd_get_terrain_travel_cost(const char* _text, const RPG::ParsedCommentData* _parsedData)
 {
+	if (_parsedData->parametersCount != 3)
+		throw ParamError("cmd_get_terrain_travel_cost: Invalid param count.");
+	
 	auto& params = _parsedData->parameters;
 	auto fromId = Param::get_integer(params[0]).value();
 	auto toId = Param::get_integer(params[1]).value();
@@ -308,6 +347,9 @@ void cmd_get_terrain_travel_cost(const char* _text, const RPG::ParsedCommentData
 
 void cmd_reset_terrain_travel_cost(const char* _text, const RPG::ParsedCommentData* _parsedData)
 {
+	if (_parsedData->parametersCount != 2)
+		throw ParamError("cmd_reset_terrain_travel_cost: Invalid param count.");
+	
 	auto& params = _parsedData->parameters;
 	auto fromId = Param::get_integer(params[0]).value();
 	auto toId = Param::get_integer(params[1]).value();
@@ -348,7 +390,13 @@ bool onComment(const char* _text, const RPG::ParsedCommentData* _parsedData, RPG
 	std::string_view cmdStr{ _parsedData->command };
 	if (const auto itr = commands.find(cmdStr); itr != std::end(commands))
 	{
-		itr->second(_text, _parsedData);
+		try
+		{
+			itr->second(_text, _parsedData);
+		}
+		catch (const ParamError&)
+		{
+		}
 		return false;
 	}
 	return true;
