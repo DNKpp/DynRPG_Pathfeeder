@@ -10,6 +10,7 @@
 #include <charconv>
 #include <locale>
 #include <sstream>
+#include <unordered_map>
 
 #include "Vector.hpp"
 #include "Pathfinding.hpp"
@@ -323,75 +324,31 @@ void cmd_clear_terrain_travel_costs(const char* _text, const RPG::ParsedCommentD
 bool onComment(const char* _text, const RPG::ParsedCommentData* _parsedData, RPG::EventScriptLine* _nextScriptLine,
 	RPG::EventScriptData* _scriptData, int _eventId, int _pageId, int _lineId, int* _nextLineId)
 {
-	std::string_view cmd{ _parsedData->command };
-	if (cmd == "pathfeeder_find_path")
+	using CommandPtr = std::add_pointer<void(const char*, const RPG::ParsedCommentData*)>::type;
+	static const std::unordered_map<std::string_view, CommandPtr> commands
 	{
-		cmd_find_path(_text, _parsedData);
-		return false;
-	}
-	else if (cmd == "pathfeeder_get_path_length")
+		{ "pathfeeder_find_path",					&::cmd_find_path },
+		{ "pathfeeder_get_path_length",				&::cmd_get_path_length },
+		{ "pathfeeder_get_path_vertex",				&::cmd_get_path_vertex },
+		{ "pathfeeder_clear_path",					&::cmd_clear_path },
+		
+		{ "pathfeeder_set_terrain_cost",			&::cmd_set_terrain_cost },
+		{ "pathfeeder_set_terrain_cost_var",		&::cmd_set_terrain_cost_var },
+		{ "pathfeeder_reset_terrain_cost",			&::cmd_reset_terrain_cost },
+		{ "pathfeeder_get_terrain_cost",			&::cmd_get_terrain_cost },
+		{ "pathfeeder_clear_terrain_costs",			&::cmd_clear_terrain_costs },
+		
+		{ "pathfeeder_set_terrain_travel_cost",		&::cmd_set_terrain_travel_cost },
+		{ "pathfeeder_set_terrain_travel_cost_var",	&::cmd_set_terrain_travel_cost_var },
+		{ "pathfeeder_reset_terrain_travel_cost",	&::cmd_reset_terrain_travel_cost },
+		{ "pathfeeder_get_terrain_travel_cost",		&::cmd_get_terrain_travel_cost },
+		{ "pathfeeder_clear_terrain_travel_costs",	&::cmd_clear_terrain_travel_costs }
+	};
+	
+	std::string_view cmdStr{ _parsedData->command };
+	if (const auto itr = commands.find(cmdStr); itr != std::end(commands))
 	{
-		cmd_get_path_length(_text, _parsedData);
-		return false;
-	}
-	else if (cmd == "pathfeeder_get_path_vertex")
-	{
-		cmd_get_path_vertex(_text, _parsedData);
-		return false;
-	}
-	else if (cmd == "pathfeeder_clear_path")
-	{
-		cmd_clear_path(_text, _parsedData);
-		return false;
-	}
-	else if (cmd == "pathfeeder_set_terrain_cost")
-	{
-		cmd_set_terrain_cost(_text, _parsedData);
-		return false;
-	}
-	else if (cmd == "pathfeeder_set_terrain_cost_var")
-	{
-		cmd_set_terrain_cost_var(_text, _parsedData);
-		return false;
-	}
-	else if (cmd == "pathfeeder_reset_terrain_cost")
-	{
-		cmd_reset_terrain_cost(_text, _parsedData);
-		return false;
-	}
-	else if (cmd == "pathfeeder_get_terrain_cost")
-	{
-		cmd_get_terrain_cost(_text, _parsedData);
-		return false;
-	}
-	else if (cmd == "pathfeeder_clear_terrain_costs")
-	{
-		cmd_clear_terrain_costs(_text, _parsedData);
-		return false;
-	}
-	else if (cmd == "pathfeeder_set_terrain_travel_cost")
-	{
-		cmd_set_terrain_travel_cost(_text, _parsedData);
-		return false;
-	}
-	else if (cmd == "pathfeeder_set_terrain_travel_cost_var")
-	{
-		cmd_set_terrain_travel_cost_var(_text, _parsedData);
-		return false;
-	}
-	else if (cmd == "pathfeeder_reset_terrain_travel_cost")
-	{
-		cmd_reset_terrain_travel_cost(_text, _parsedData);
-		return false;
-	}
-	else if (cmd == "pathfeeder_get_terrain_travel_cost")
-	{
-		cmd_get_terrain_travel_cost(_text, _parsedData);
-		return false;
-	}
-	else if (cmd == "pathfeeder_clear_terrain_travel_costs")
-	{
-		cmd_clear_terrain_travel_costs(_text, _parsedData);
+		itr->second(_text, _parsedData);
 		return false;
 	}
 	return true;
