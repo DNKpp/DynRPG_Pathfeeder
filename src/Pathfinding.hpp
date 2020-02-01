@@ -109,8 +109,8 @@ public:
 		{
 			auto value = std::get<1>(*itr);
 			if (value < 0)
-				return std::max(0, RPG::system->variables[-value]);
-			return value;
+				return std::max(1, RPG::system->variables[-value]);
+			return std::max(1, value);
 		}
 		return _terrain_id;
 	}
@@ -180,13 +180,13 @@ public:
 		auto costCalculator = [](const Vector& _pos)
 		{
 			auto tileId = RPG::map->getLowerLayerTileId(_pos.x, _pos.y);
-			//return globalCostCalculator.get_cost(RPG::map->getTerrainId(tileId));
-			return RPG::map->getTerrainId(tileId);
+			return globalCostCalculator.get_cost(RPG::map->getTerrainId(tileId));
+			//return RPG::map->getTerrainId(tileId);
 		};
 		
-		auto heuristicCalculator = [&_end](const Vector& _prevPos, const Vector& _pos)
+		auto heuristicCalculator = [](const Vector& _pos, const Vector& _dest)
 		{
-			auto diff = _end - _pos;
+			auto diff = _dest - _pos;
 			return std::abs(diff.x) + std::abs(diff.y);
 		};
 
