@@ -375,48 +375,6 @@ bool onEventCommand(RPG::EventScriptLine* _scriptLine, RPG::EventScriptData* _sc
 	return true;
 }
 
-/*template <class T>
-class ArrayView
-{
-public:
-	using value_type				= T;
-	using size_type					= std::size_t;
-    using difference_type			= std::ptrdiff_t;
-    using reference					= T&;
-    using const_reference			= const T&;
-    using pointer					= T*;
-    using const_pointer				= const T*;
-    using iterator					= typename TContainer::iterator;
-    using const_iterator			= typename TContainer::const_iterator;
-    using reverse_iterator			= typename TContainer::reverse_iterator;
-    using const_reverse_iterator	= typename TContainer::const_reverse_iterator;
-	
-	ArrayView(T* _dataPtr, int _length) :
-		m_DataPtr{ _dataPtr },
-		m_Length{ _length }
-	{
-	}
-
-    reference operator[](size_type n)
-	{
-		assert(m_Length <= _at);
-		return m_DataPtr[_at];	
-	}
-	
-    constexpr const_reference operator[](size_type n) const;
-    constexpr const_reference at(size_type n) const;
-    constexpr reference       at(size_type n);
-    constexpr reference       front();
-    constexpr const_reference front() const;
-    constexpr reference       back();
-    constexpr const_reference back() const;
-
-
-private:
-	T* m_DataPtr;
-	int m_Length;
-};*/
-
 void onLoadGame(int _id, char* _data, int _length)
 {
 	// thanks to https://stackoverflow.com/a/1449527/4691843
