@@ -62,13 +62,13 @@ Another example are higher steps. When you climb from a higher step to a lower s
 ##### Find Path:
 	@pathfeeder_find_path in_target, in_x, in_y out_path_id, out_s_success
 
-###### Details:
+##### Details:
 This function is used to calculate the path from an event to a specific destination (x- and y-coordinates). The cost for each step is determined by the terrain ID. To manipulate this cost, look at the terrain_cost functions below.
 
 **!!Attention!!**  
 This function may fail if the destination is not reachable. Please, always check the success information before relying on any other output.
 
-###### Params:
+##### Params:
 Name				| Description
 --------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 **in_target**		| Expects event IDs as an integer. Also accepts specific tokens for special events (hero, airship, ship, skiff). The event for whom the path will be calculated.
@@ -81,13 +81,13 @@ Name				| Description
 ##### Get Path Length:
 	@pathfeeder_get_path_length in_path_id, out_path_length, out_s_success
 	
-###### Details:
+##### Details:
 Each path consists of several vertices (the map tiles). This function returns how many of those tiles are included in this path (including the start and end tiles).
 
 **!!Attention!!**  
 This function may fail if the path is not available. Please, always check the success information before relying on any other output.
 
-###### Params:
+##### Params:
 Name				| Description
 --------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 **in_path_id** 		| Expects a path ID as an integer. Identifies the path whose length we are retrieving.
@@ -98,13 +98,13 @@ Name				| Description
 ##### Get Path vertex:
 	@pathfeeder_get_path_vertex in_path_id, in_vertex_index, out_vertex_x, out_vertex_y, out_s_success
 
-###### Details:
+##### Details:
 This function returns information about one specific vertex along the generated path. To get the right one, you have to determine which path you want to look at by providing the plugin with the path ID of the path you wish to query. Each path consists of several vertices (the map tiles), thus you have to tell the plugin which specific vertex you are interested in. Note that vertex 0 is the starting tile from which the generated path is begun, vertex 1 is the tile of the first step, vertex 2 is the tile of the second step, and etc. The X and Y coordinates of the queried vertex will be fed into RPG-variables at the specified IDs.
 
 **!!Attention!!**  
 This function may fail if the path is not available or the specified vertex index is out of bounds. Please, always check the success information before relying on any other output.
 
-###### Params:
+##### Params:
 Name				| Description
 -------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 **in_path_id** 	| Expects a path ID as an integer. Identifies the path which contains the vertex we wish to query.
@@ -117,10 +117,10 @@ Name				| Description
 ##### Clear Path:
 	@pathfeeder_clear_path in_path_id
 
-###### Details:
+##### Details:
 Every path you generate via this plugin will be stored internally so as to be able to provide the needed information when necessary. When you are done with the path, you should clear it to free memory for further tasks.
 
-###### Params:
+##### Params:
 Name				| Description
 --------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 **in_path_id**		| Expects a path ID as an integer. Identifies the path to be cleared from memory.
@@ -130,10 +130,10 @@ Name				| Description
 ##### Set Terrain Cost:
 	@pathfeeder_set_terrain_cost in_terrain_id, in_cost
 
-###### Details:
+##### Details:
 Changes the cost of a terrain ID. The cost for the specified terrain will be used for future pathfinding tasks. It will be cached internally until you reset the specific terrain or clear everything.
 
-###### Params:
+##### Params:
 Name				| Description
 --------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 **in_terrain_id**	| Expects a terrain ID as an integer. Identifies the ID of the terrain type whose cost should be changed.
@@ -143,10 +143,10 @@ Name				| Description
 ##### Set Terrain Cost Var:
 	@pathfeeder_set_terrain_cost_var in_terrain_id, in_var_id
 
-###### Details:
+##### Details:
 Permanently associates the specified terrain ID's cost with the specified RPG-variable ID. The designated RPG-variable will be used as a dynamic cost for the specified terrain in future pathfinding tasks until specified otherwise with another <code>set_terrain_cost</code> or <code>set_terrain_cost_var</code> command. If the value of the associated RPG-variable ever changes, so too will the cost of the specified terrain. 
 
-###### Params:
+##### Params:
 Name				| Description
 --------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 **in_terrain_id**	| Expects a terrain ID as an integer. Identifies the ID of the terrain type whose cost should become associated with the variable.
@@ -156,10 +156,10 @@ Name				| Description
 ##### Reset Terrain Cost:
 	@pathfeeder_reset_terrain_cost in_terrain_id
 
-###### Details:
+##### Details:
 The cost for the specified terrain will be reset to its default value (terrain ID as cost).
 
-###### Params:
+##### Params:
 Name				| Description
 --------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 **in_terrain_id**	| Expects a terrain ID as an integer. Identifies the terrain ID to be reset.
@@ -168,10 +168,10 @@ Name				| Description
 ##### Get Terrain Cost:
 	@pathfeeder_get_terrain_cost in_terrain_id, out_cost
 
-###### Details
+##### Details
 Returns the current cached terrain cost into the RPG-variable with the specified id.
 
-###### Params
+##### Params
 Name				| Description
 --------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 **in_terrain_id**	| Expects a terrain ID as an integer. Identifies the terrain ID whose cost should be retrieved.
@@ -181,7 +181,7 @@ Name				| Description
 ##### Clear Terrain Costs:
 	@pathfeeder_clear_terrain_costs
 
-###### Details:
+##### Details:
 Clears the internal terrain cost settings.
 
 
@@ -190,10 +190,10 @@ Clears the internal terrain cost settings.
 ##### Set Terrain Travel Cost:
 	@pathfeeder_set_terrain_travel_cost in_from_terrain_id, in_to_terrain_id, in_cost
 
-###### Details:
+##### Details:
 Changes the cost of a terrain ID. The cost for the specified terrain will be used for future pathfinding tasks. It will be cached internally until you reset the specific terrain or clear everything.
 
-###### Params:
+##### Params:
 Name				| Description
 |-------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 **in_from_terrain_id**	| Expects a terrain ID as an integer. Identifies the ID of the source terrain type whose cost should be changed.
@@ -204,10 +204,10 @@ Name				| Description
 ##### Set Terrain Travel Cost Var:
 	@pathfeeder_set_terrain_travel_cost_var in_from_terrain_id, in_to_terrain_id, in_var_id
 
-###### Details:
+##### Details:
 Permanently associates the specified terrain ID's cost with the specified RPG-variable ID. The designated RPG-variable will be used as a dynamic cost for the specified terrain in future pathfinding tasks until specified otherwise with another <code>set_terrain_cost</code> or <code>set_terrain_cost_var</code> command. If the value of the associated RPG-variable ever changes, so too will the cost of the specified terrain. 
 
-###### Params:
+##### Params:
 Name				| Description
 |-------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 **in_from_terrain_id**	| Expects a terrain ID as an integer. Identifies the ID of the source terrain type whose cost should be changed.
@@ -218,10 +218,10 @@ Name				| Description
 ##### Reset Terrain Travel Cost:
 	@pathfeeder_reset_terrain_travel_cost in_from_terrain_id, in_to_terrain_id
 
-###### Details:
+##### Details:
 The cost for the specified terrain will be reset to its default value (terrain ID as cost).
 
-###### Params:
+##### Params:
 Name				| Description
 --------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 **in_from_terrain_id**	| Expects a terrain ID as an integer. Identifies the ID of the source terrain type.
@@ -231,10 +231,10 @@ Name				| Description
 ##### Get Terrain Travel Cost:
 	@pathfeeder_get_terrain_travel_cost in_from_terrain_id, in_to_terrain_id, out_cost
 
-###### Details
+##### Details
 Returns the current cached terrain cost into the RPG-variable with the specified id.
 
-###### Params
+##### Params
 Name				| Description
 --------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 **in_from_terrain_id**| Expects a terrain ID as an integer. Identifies the ID of the source terrain type.
@@ -245,7 +245,7 @@ Name				| Description
 ##### Clear Terrain Travel Costs:
 	@pathfeeder_clear_terrain_travel_costs
 
-###### Details:
+##### Details:
 Clears the internal terrain travel cost settings.
 
 
