@@ -1,4 +1,4 @@
-#include "Simple-Graph/Searcher.hpp"
+#include "Simple-Graph/algorithm.hpp"
 #include "Simple-Utility/container/Vector2d.hpp"
 #include "Simple-Utility/container/SortedVector.hpp"
 
@@ -162,126 +162,6 @@ bool is_valid_pos(const Vector& _at)
 		0 <= _at.y && _at.y < map.getHeight();
 }
 
-template <class TSearcher>
-class NodeMap
-{
-public:
-	using vertex_type = typename TSearcher::VertexType;
-	using value_type = typename TSearcher::NodeDataType;
-	using node_type = typename TSearcher::NodeType;
-
-	explicit NodeMap(int _width, int _height) :
-		m_Map(_width, _height)
-	{
-	}
-
-	template <class TNodeCompare>
-	void insert(const node_type& _node, TNodeCompare&& _nodeComp)
-	{
-		auto& at = m_Map[_node.vertex.x][_node.vertex.y];
-		if (!at)
-			at = _node.data;
-		else if (_nodeComp(_node.data, *at))
-		{
-			at = _node.data;
-			++m_NodeCount;
-		}
-	}
-
-	/*template <class TNodeCompare>
-	node_type take_node(TNodeCompare&& _nodeComp)
-	{
-		auto itr = std::min_element(std::begin(m_Nodes), std::end(m_Nodes),
-			[&_nodeComp](const auto& _lhs, const auto& _rhs) { return _nodeComp(_lhs.second, _rhs.second); }
-		);
-		assert(itr != std::end(m_Nodes));
-		auto node = std::move(*itr);
-		m_Nodes.erase(itr);
-		return { node.first, node.second };
-	}*/
-
-	const value_type* find(const vertex_type& _key) const
-	{
-		auto& at = m_Map[_key.x][_key.y];
-		if (at)
-			return &*at;
-		return nullptr;
-	}
-
-	bool contains(const vertex_type& _key) const
-	{
-		return m_Map[_key.x][_key.y].has_value();
-	}
-
-	bool empty() const
-	{
-		return m_NodeCount == 0;
-	}
-
-private:
-	int m_NodeCount = 0;
-	sl::container::Vector2d<std::optional<value_type>> m_Map;
-};
-
-template <class TSearcher>
-class NodeList
-{
-public:
-	using vertex_type = typename TSearcher::VertexType;
-	using value_type = typename TSearcher::NodeDataType;
-	using node_type = typename TSearcher::NodeType;
-
-	template <class TNodeCompare>
-	void insert(const node_type& _node, TNodeCompare&& _nodeComp)
-	{
-		if (auto [itr, result] = m_Nodes.insert(_node); !result && _nodeComp(_node.data, itr->data))
-			itr->data = _node.data;
-	}
-
-	template <class TNodeCompare>
-	node_type take_node(TNodeCompare&& _nodeComp)
-	{
-		auto itr = std::min_element(std::begin(m_Nodes), std::end(m_Nodes),
-			[&_nodeComp](const auto& _lhs, const auto& _rhs) { return _nodeComp(_lhs.data, _rhs.data); }
-		);
-		assert(itr != std::end(m_Nodes));
-		auto node = *itr;
-		m_Nodes.erase(itr);
-		return node;
-	}
-
-	/*const NodeDataType* find(const VertexType& _key) const
-	{
-		auto& at = m_Map[_node.vertex.x][_node.vertex.y];
-		if (at)
-			return &*at;
-		return nullptr;
-	}*/
-
-	/*bool contains(const vertex_type& _key) const
-	{
-		return m_Map[_node.vertex.x][_node.vertex.y];
-	}*/
-
-	bool empty() const
-	{
-		return std::empty(m_Nodes);
-	}
-
-private:
-	struct NodeVertexLess
-	{
-		bool operator ()(const node_type& _lhs, const node_type& _rhs) const
-		{
-			return _lhs.vertex.x < _rhs.vertex.x ||
-				(_lhs.vertex.x == _rhs.vertex.x && _lhs.vertex.y < _rhs.vertex.y);
-		}
-	};
-	
-	int m_NodeCount = 0;
-	sl::container::SortedVector<node_type, NodeVertexLess> m_Nodes;
-};
-
 class Pathfinder
 {
 public:
@@ -297,7 +177,7 @@ public:
 			}
 		};
 
-		auto costCalculator = [](const Vector& _prevPos, const Vector& _pos)
+		auto costCalculator = [](const Vector& _pos)
 		{
 			auto tileId = RPG::map->getLowerLayerTileId(_pos.x, _pos.y);
 			//return globalCostCalculator.get_cost(RPG::map->getTerrainId(tileId));
@@ -309,10 +189,6 @@ public:
 			auto diff = _end - _pos;
 			return std::abs(diff.x) + std::abs(diff.y);
 		};
-		auto searcher = sl::graph::make_astar_searcher<Vector>(costCalculator, heuristicCalculator);
-		using Searcher_t = decltype(searcher);
-		//using Map_t = std::map<typename Searcher_t::VertexType, typename Searcher_t::NodeDataType, VectorLess>;
-
 
 		auto neighbourSearcher = [&_character](const auto& _node, auto&& _callback)
 		{
@@ -332,13 +208,73 @@ public:
 			}
 		};
 
-		if (auto path = sl::graph::find_path(start, _end, neighbourSearcher, searcher, NodeList<Searcher_t>(), NodeMap<Searcher_t>(RPG::map->getWidth(), RPG::map->getHeight())))
+		class TableVisitationTracker
 		{
+		public:
+			TableVisitationTracker(std::size_t _width, std::size_t _height) :
+				m_Tracker{ _width, _height }
+			{
+			}
+			
+			decltype(auto) operator [](const Vector& _at)
+			{
+				return m_Tracker[_at.x][_at.y];
+			}
+			
+		private:
+			sl::container::Vector2d<bool> m_Tracker;
+		};
+
+		using Node = sl::graph::AStarNode<Vector, int>;
+		struct NodeVectorLess
+		{
+			bool operator ()(const Node& _lhs, const Node& _rhs) const
+			{
+				return VectorLess{}(_lhs.vertex, _rhs.vertex);
+			}
+
+			bool operator ()(const Node& _lhs, const Vector& _rhs) const
+			{
+				return VectorLess{}(_lhs.vertex, _rhs);
+			}
+
+			bool operator ()(const Vector& _lhs, const Node& _rhs) const
+			{
+				return VectorLess{}(_lhs, _rhs.vertex);
+			}
+		};
+		
+		sl::container::SortedVector<Node, NodeVectorLess> closedList;
+		sl::graph::traverse_astar(start, _end, neighbourSearcher,
+			TableVisitationTracker{ static_cast<std::size_t>(RPG::map->getWidth()), static_cast<std::size_t>(RPG::map->getHeight()) },
+			heuristicCalculator, costCalculator, sl::graph::ConstWeight<0>{},
+			[&closedList](const Node& _node)
+			{
+				closedList.insert(_node);
+			}
+		);
+		
+		if (auto path = _extract_path(closedList, _end))
 			return globalPathMgr.insert_path(std::move(*path));
-		}
 		return std::nullopt;
 	}
 	
 private:
-	
+	template <class TClosedList>
+	std::optional<Path> _extract_path(const TClosedList& _closedList, Vector _end)
+	{
+		Path path;
+		auto itr = _closedList.find(_end);
+		if (itr == std::end(_closedList))
+			return std::nullopt;
+
+		path.emplace_back(itr->vertex);
+		while (itr->parent)
+		{
+			path.emplace_back(*itr->parent);
+			itr = _closedList.find(*itr->parent);
+		}
+		std::reverse(std::begin(path), std::end(path));
+		return path;
+	}
 };
