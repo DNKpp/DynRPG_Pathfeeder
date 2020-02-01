@@ -20,11 +20,11 @@ This is a plugin written for DynRPG 0.32. It is not possible to use it with prev
 ## Documentation:
 Before we start with the function documentation itself, please read the following guidelines first:
 
-* Parameters starting with `in_...` hand over information to the function for the plugin to use.
-* Parameters starting with `out_...` retrieve information from the plugin and feed it to the RM2k3 environment. Those `out` values simply refer to internal variables or switches of RM2k3 via index (e.g. if you pass 3 to a parameter called `out_id`, the variable with index 3 (ie, var[0003]) in RM2k3 will be set).
-* Some parameters will have a clamped `..._s_...` in their name. This indicates that this parameter refers to a switch instead of a variable.
-* When any of these functions have a parameter named `out_s_success`, they are able to fail. When referring to any other `out...` variable of that function, you **must** check the success switch first to be sure that you will receive valid values. The success switch is the only parameter which will be set to either true or false. If the function fails, any other "out" parameter won't be touched and the function will abort.
-* Most (if not all) parameters of the functions in this plugin are integers. To save some space and keep the documentation clean, please keep in mind that you are able to either pass a plain value (like 1, 2, -2, ...) or an indirect value through an RPG::variable (v1 refers to the RPG::variable with ID 1; v2 to ID 2; etc.). You are able to chain those leading `v` prefixes, thus you are able to perform multiple indirections (vv1 looks into variable 1 and uses its value as the final ID). It is important to keep in mind that, unless stated otherwise, IDs start at 1 (not 0).
++ Parameters starting with `in_...` hand over information to the function for the plugin to use.
++ Parameters starting with `out_...` retrieve information from the plugin and feed it to the RM2k3 environment. Those `out` values simply refer to internal variables or switches of RM2k3 via index (e.g. if you pass 3 to a parameter called `out_id`, the variable with index 3 (ie, var[0003]) in RM2k3 will be set).
++ Some parameters will have a clamped `..._s_...` in their name. This indicates that this parameter refers to a switch instead of a variable.
++ When any of these functions have a parameter named `out_s_success`, they are able to fail. When referring to any other `out...` variable of that function, you **must** check the success switch first to be sure that you will receive valid values. The success switch is the only parameter which will be set to either true or false. If the function fails, any other "out" parameter won't be touched and the function will abort.
++ Most (if not all) parameters of the functions in this plugin are integers. To save some space and keep the documentation clean, please keep in mind that you are able to either pass a plain value (like 1, 2, -2, ...) or an indirect value through an RPG::variable (v1 refers to the RPG::variable with ID 1; v2 to ID 2; etc.). You are able to chain those leading `v` prefixes, thus you are able to perform multiple indirections (vv1 looks into variable 1 and uses its value as the final ID). It is important to keep in mind that, unless stated otherwise, IDs start at 1 (not 0).
 
 ### Concept:
 This plugin consists of two parts: the configuration and the "pathfeeding".
@@ -165,11 +165,11 @@ Returns the current cached terrain cost into the RPG::variable with the specifie
 
 ### Ini Layout:
 An .ini file consists of multiple section elements and multiple subordinated key/value pairs. The section name "pathfeeder" is reserved by this plugin. You can configure the costs for your terrain IDs here. Treat the IDs as keys and the costs as values. You can also refer a value to a variable cost. All you have to do is to use a negative value (which will be treated internally as absolute ID).
-
-	[pathfeeder]
-		5=10	// terrain ID 5 has cost of 10
-		6=-5	// terrain ID 6 will use the value of RPG::variable ID 5 as cost
-
+```ini
+[pathfeeder]
+	5=10	// terrain ID 5 has cost of 10
+	6=-5	// terrain ID 6 will use the value of RPG::variable ID 5 as cost
+```
 
 ### Technical Details:
 The version of the GCC which is used by all the other plugins is very antique. I tried my best to get around this. To be honest, I've found GCC to be a pain. So I tried 2 other compilers: MSVC and Clang. Due to the different ASM syntax, I wasn't able to compile the library with MSVC, but Clang did the job. As a result, I was able to update the C++ version to C++17, which offers some huge conveniences. After some progress, I realized that Clang's optimizer was too aggressive and outright kicked some code from the binary, because it thought it wasn't necessary. But I was finally able to tell it via compiler flag /Oy- to be more patient, and now it seems fine. But, just in case, if you encounter anything weird, please don't hesitate to contact me.
