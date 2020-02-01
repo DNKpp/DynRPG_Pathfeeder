@@ -159,7 +159,7 @@ Name				| Description
 ##### Details
 The cost for the specified terrain will be reset to its default value (terrain ID as cost).
 
-##### Params:
+##### Params
 Name				| Description
 --------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 **in_terrain_id**	| Expects a terrain ID as an integer. Identifies the terrain ID to be reset.
