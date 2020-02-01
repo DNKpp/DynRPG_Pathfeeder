@@ -195,7 +195,7 @@ Changes the cost of a terrain ID. The cost for the specified terrain will be use
 
 ##### Params
 Name				| Description
-|-------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 **in_from_terrain_id**	| Expects a terrain ID as an integer. Identifies the ID of the source terrain type whose cost should be changed.
 **in_to_terrain_id**	| Expects a terrain ID as an integer. Identifies the ID of the destination terrain type whose cost should be changed.
 **in_cost**				| Expects a value as an integer. This will become the new cost of the specified terrain travel.
@@ -209,7 +209,7 @@ Permanently associates the specified terrain ID's cost with the specified RPG-va
 
 ##### Params
 Name				| Description
-|-------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 **in_from_terrain_id**	| Expects a terrain ID as an integer. Identifies the ID of the source terrain type whose cost should be changed.
 **in_to_terrain_id**	| Expects a terrain ID as an integer. Identifies the ID of the destination terrain type whose cost should be changed.
 **in_var_id**			| Expects an RPG-variable ID as an integer. This variable will be used to dynamically look up the cost value of the specified terrain travel.
