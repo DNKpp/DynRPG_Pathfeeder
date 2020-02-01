@@ -69,6 +69,7 @@ This function is used to calculate the path from an event to a specific destinat
 This function may fail if the destination is not reachable. Please, always check the success information before relying on any other output.
 
 ##### Params
+
 Name				| Description
 --------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 **in_target**		| Expects event IDs as an integer. Also accepts specific tokens for special events (hero, airship, ship, skiff). The event for whom the path will be calculated.
@@ -88,6 +89,7 @@ Each path consists of several vertices (the map tiles). This function returns ho
 This function may fail if the path is not available. Please, always check the success information before relying on any other output.
 
 ##### Params
+
 Name				| Description
 --------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 **in_path_id** 		| Expects a path ID as an integer. Identifies the path whose length we are retrieving.
@@ -105,10 +107,11 @@ This function returns information about one specific vertex along the generated 
 This function may fail if the path is not available or the specified vertex index is out of bounds. Please, always check the success information before relying on any other output.
 
 ##### Params
+
 Name				| Description
--------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-**in_path_id** 	| Expects a path ID as an integer. Identifies the path which contains the vertex we wish to query.
-**in_vertex_index**| Expects a vertex index (starting at 0) as an integer. Identifies which vertex (ie, which tile along the generated path) to retrieve information about.
+--------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+**in_path_id**		| Expects a path ID as an integer. Identifies the path which contains the vertex we wish to query.
+**in_vertex_index**	| Expects a vertex index (starting at 0) as an integer. Identifies which vertex (ie, which tile along the generated path) to retrieve information about.
 **out_vertex_x** 	| Expects an RPG-variable ID as an integer. It will use the provided value as the variable index at which to feed you the X coordinate value of the specified vertex.
 **out_vertex_y** 	| Expects an RPG-variable ID as an integer. It will use the provided value as the variable index at which to feed you the Y coordinate value of the specified vertex.
 **out_s_success**	| Expects an RPG-switch ID as an integer. It will use the provided value as the switch index at which to feed you the function's result (false = it failed; true = success).
@@ -121,6 +124,7 @@ Name				| Description
 Every path you generate via this plugin will be stored internally so as to be able to provide the needed information when necessary. When you are done with the path, you should clear it to free memory for further tasks.
 
 ##### Params
+
 Name				| Description
 --------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 **in_path_id**		| Expects a path ID as an integer. Identifies the path to be cleared from memory.
@@ -134,6 +138,7 @@ Name				| Description
 Changes the cost of a terrain ID. The cost for the specified terrain will be used for future pathfinding tasks. It will be cached internally until you reset the specific terrain or clear everything.
 
 ##### Params
+
 Name				| Description
 --------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 **in_terrain_id**	| Expects a terrain ID as an integer. Identifies the ID of the terrain type whose cost should be changed.
@@ -146,7 +151,8 @@ Name				| Description
 ##### Details
 Permanently associates the specified terrain ID's cost with the specified RPG-variable ID. The designated RPG-variable will be used as a dynamic cost for the specified terrain in future pathfinding tasks until specified otherwise with another <code>set_terrain_cost</code> or <code>set_terrain_cost_var</code> command. If the value of the associated RPG-variable ever changes, so too will the cost of the specified terrain. 
 
-##### Params:
+##### Params
+
 Name				| Description
 --------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 **in_terrain_id**	| Expects a terrain ID as an integer. Identifies the ID of the terrain type whose cost should become associated with the variable.
@@ -160,6 +166,7 @@ Name				| Description
 The cost for the specified terrain will be reset to its default value (terrain ID as cost).
 
 ##### Params
+
 Name				| Description
 --------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 **in_terrain_id**	| Expects a terrain ID as an integer. Identifies the terrain ID to be reset.
@@ -172,6 +179,7 @@ Name				| Description
 Returns the current cached terrain cost into the RPG-variable with the specified id.
 
 ##### Params
+
 Name				| Description
 --------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 **in_terrain_id**	| Expects a terrain ID as an integer. Identifies the terrain ID whose cost should be retrieved.
@@ -194,6 +202,7 @@ Clears the internal terrain cost settings.
 Changes the cost of a terrain ID. The cost for the specified terrain will be used for future pathfinding tasks. It will be cached internally until you reset the specific terrain or clear everything.
 
 ##### Params
+
 Name				| Description
 --------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 **in_from_terrain_id**	| Expects a terrain ID as an integer. Identifies the ID of the source terrain type whose cost should be changed.
@@ -208,6 +217,7 @@ Name				| Description
 Permanently associates the specified terrain ID's cost with the specified RPG-variable ID. The designated RPG-variable will be used as a dynamic cost for the specified terrain in future pathfinding tasks until specified otherwise with another <code>set_terrain_cost</code> or <code>set_terrain_cost_var</code> command. If the value of the associated RPG-variable ever changes, so too will the cost of the specified terrain. 
 
 ##### Params
+
 Name				| Description
 --------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 **in_from_terrain_id**	| Expects a terrain ID as an integer. Identifies the ID of the source terrain type whose cost should be changed.
@@ -215,26 +225,28 @@ Name				| Description
 **in_var_id**			| Expects an RPG-variable ID as an integer. This variable will be used to dynamically look up the cost value of the specified terrain travel.
 
 
-#### Reset Terrain Travel Cost:
+#### Reset Terrain Travel Cost
 	@pathfeeder_reset_terrain_travel_cost in_from_terrain_id, in_to_terrain_id
 
-##### Details:
+##### Details
 The cost for the specified terrain will be reset to its default value (terrain ID as cost).
 
 ##### Params
+
 Name				| Description
 --------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 **in_from_terrain_id**	| Expects a terrain ID as an integer. Identifies the ID of the source terrain type.
 **in_to_terrain_id**	| Expects a terrain ID as an integer. Identifies the ID of the destiantion terrain type.
 
 
-#### Get Terrain Travel Cost:
+#### Get Terrain Travel Cost
 	@pathfeeder_get_terrain_travel_cost in_from_terrain_id, in_to_terrain_id, out_cost
 
-##### Details:
+##### Details
 Returns the current cached terrain cost into the RPG-variable with the specified id.
 
 ##### Params
+
 Name				| Description
 --------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 **in_from_terrain_id**| Expects a terrain ID as an integer. Identifies the ID of the source terrain type.
