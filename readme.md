@@ -45,14 +45,15 @@ You are able to configure the cost for each terrain ID you are using on your map
 a road through a deep forest where the road tiles have lesser movement costs than the deep forest tiles) and let them more likely use that path than the direct
 connection (be aware of the big bad wolf :D).
 When you leave everything untouched, the plugin will use the terrain ID of each tile as its cost value, but you are able to manipulate this behavior via DynRPG.ini
-and, again, event comment. The configuration via .ini will be initially loaded when you start a new game. Every other modification of those values will be serialized
-to the save files. For additional information regarding the .ini configuration, see the Ini Layout section at the bottom of this document.
+and, again, event comment. Be aware that the cost values are not allowed to be less than 1, because otherwise the algorithm will be distracted. Therefore the plugin
+internally uses the max(1, x) function. The configuration via .ini will be initially loaded when you start a new game. Every other modification of those values will
+be serialized to the save files. For additional information regarding the .ini configuration, see the Ini Layout section at the bottom of this document.
 
 #### Terrain Travel Costs
-Other than the previous, these costs will default to 0. But, what are they? Well, sometimes it is easy to on a specific terrain, e.g. but if you travel
-on a dirty road you'll move in a constant speed. If you walk in a normal housing floor, you'll walk there in a constant speed, too.  But if you walk from that dirty
-road into a building, you must clean your shoes first. This shoe cleaning is a time consuming task and therefore causes some costs. This travel costs (I'm not a very
-creative person :D) is the right tool if you try to achieve something like this.
+Other than the previous, these costs will default to 0 (this is also the minimum value!). But, what are they? If you travel on a dirty road you'll move in a constant
+speed. If you walk through a normal housing floor, you'll walk there in a constant speed, too.  But if you walk from that dirty road into a building, you must clean
+your shoes first. This shoe cleaning is a time consuming task and therefore causes some costs. This travel costs (I'm not a very creative person :D) is the right tool
+if you try to achieve something like this.
 
 Those travel costs are directed, this means traveling from the dirty road into a building is expensive, while moving out of a building on that dirty road doesn't
 cause any costs.
