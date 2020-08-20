@@ -4,3 +4,6 @@
 [submodule "dependencies/Simple-Utility"]
 	path = dependencies/Simple-Utility
 	url = git@github.com:DNKpp/Simple-Utility.git
+[submodule "dependencies/georithm"]
+	path = dependencies/georithm
+	url = git@github.com:DNKpp/georithm.git
