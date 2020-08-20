@@ -4,7 +4,10 @@
 
 // ToDo: Clear the globalPathManager object on map change
 
+#include <georithm/Vector.hpp>
+
 #include <DynRPG/DynRPG.h>
+
 #include <string_view>
 #include <stdexcept>
 #include <charconv>
@@ -12,7 +15,6 @@
 #include <sstream>
 #include <unordered_map>
 
-#include "Vector.hpp"
 #include "Pathfinding.hpp"
 
 struct RPGVariable
@@ -172,7 +174,7 @@ struct ParamError : std::runtime_error
 
 void cmd_find_path(const char* _text, const RPG::ParsedCommentData* _parsedData)
 {
-	//auto begin = std::chrono::steady_clock::now();
+	auto begin = std::chrono::steady_clock::now();
 
 	if (_parsedData->parametersCount != 5)
 		throw ParamError("cmd_find_path: Invalid param count.");
@@ -194,8 +196,8 @@ void cmd_find_path(const char* _text, const RPG::ParsedCommentData* _parsedData)
 		}
 	}
 
-	//auto diff = std::chrono::steady_clock::now() - begin;
-	//RPG::variables[50] = diff.count() / 1000;
+	auto diff = std::chrono::steady_clock::now() - begin;
+	RPG::variables[50] = diff.count() / 1000;
 }
 
 void cmd_get_path_length(const char* _text, const RPG::ParsedCommentData* _parsedData)
@@ -234,8 +236,8 @@ void cmd_get_path_vertex(const char* _text, const RPG::ParsedCommentData* _parse
 	{
 		auto& path = *pathPtr;
 		auto vertex = path[static_cast<std::size_t>(index)];
-		outX = vertex.x;
-		outY = vertex.y;
+		outX = vertex.x();
+		outY = vertex.y();
 		outSuccess = true;
 	}
 	else
@@ -369,35 +371,41 @@ bool onComment(const char* _text, const RPG::ParsedCommentData* _parsedData, RPG
 	using CommandPtr = std::add_pointer<void(const char*, const RPG::ParsedCommentData*)>::type;
 	static const std::unordered_map<std::string_view, CommandPtr> commands
 	{
-		{ "pathfeeder_find_path",					&::cmd_find_path },
-		{ "pathfeeder_get_path_length",				&::cmd_get_path_length },
-		{ "pathfeeder_get_path_vertex",				&::cmd_get_path_vertex },
-		{ "pathfeeder_clear_path",					&::cmd_clear_path },
+		{ "find_path",					&::cmd_find_path },
+		{ "get_path_length",			&::cmd_get_path_length },
+		{ "get_path_vertex",			&::cmd_get_path_vertex },
+		{ "clear_path",					&::cmd_clear_path },
 		
-		{ "pathfeeder_set_terrain_cost",			&::cmd_set_terrain_cost },
-		{ "pathfeeder_set_terrain_cost_var",		&::cmd_set_terrain_cost_var },
-		{ "pathfeeder_reset_terrain_cost",			&::cmd_reset_terrain_cost },
-		{ "pathfeeder_get_terrain_cost",			&::cmd_get_terrain_cost },
-		{ "pathfeeder_clear_terrain_costs",			&::cmd_clear_terrain_costs },
+		{ "set_terrain_cost",			&::cmd_set_terrain_cost },
+		{ "set_terrain_cost_var",		&::cmd_set_terrain_cost_var },
+		{ "reset_terrain_cost",			&::cmd_reset_terrain_cost },
+		{ "get_terrain_cost",			&::cmd_get_terrain_cost },
+		{ "clear_terrain_costs",		&::cmd_clear_terrain_costs },
 		
-		{ "pathfeeder_set_terrain_travel_cost",		&::cmd_set_terrain_travel_cost },
-		{ "pathfeeder_set_terrain_travel_cost_var",	&::cmd_set_terrain_travel_cost_var },
-		{ "pathfeeder_reset_terrain_travel_cost",	&::cmd_reset_terrain_travel_cost },
-		{ "pathfeeder_get_terrain_travel_cost",		&::cmd_get_terrain_travel_cost },
-		{ "pathfeeder_clear_terrain_travel_costs",	&::cmd_clear_terrain_travel_costs }
+		{ "set_terrain_travel_cost",	&::cmd_set_terrain_travel_cost },
+		{ "set_terrain_travel_cost_var",&::cmd_set_terrain_travel_cost_var },
+		{ "reset_terrain_travel_cost",	&::cmd_reset_terrain_travel_cost },
+		{ "get_terrain_travel_cost",	&::cmd_get_terrain_travel_cost },
+		{ "clear_terrain_travel_costs",	&::cmd_clear_terrain_travel_costs }
 	};
-	
+
+	constexpr std::string_view pathfeederPrefix = "pathfeeder_";
 	std::string_view cmdStr{ _parsedData->command };
-	if (const auto itr = commands.find(cmdStr); itr != std::end(commands))
+
+	if (cmdStr.starts_with(pathfeederPrefix))
 	{
-		try
+		cmdStr.remove_prefix(std::size(pathfeederPrefix));
+		if (const auto itr = commands.find(cmdStr); itr != std::end(commands))
 		{
-			itr->second(_text, _parsedData);
+			try
+			{
+				itr->second(_text, _parsedData);
+			}
+			catch (const ParamError&)
+			{
+			}
+			return false;
 		}
-		catch (const ParamError&)
-		{
-		}
-		return false;
 	}
 	return true;
 }

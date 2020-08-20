@@ -1,8 +1,10 @@
-#include "Simple-Graph/algorithm.hpp"
+#pragma once
+
+#include <Simple-Graph/AStar.hpp>
 #include "Simple-Utility/container/Vector2d.hpp"
 #include "Simple-Utility/container/SortedVector.hpp"
 
-#include "Vector.hpp"
+#include <georithm/Vector.hpp>
 
 #include <DynRPG/DynRPG.h>
 
@@ -10,10 +12,12 @@
 #include <variant>
 #include <algorithm>
 #include <chrono>
+#include <optional>
 
 #undef max		// lol
 
-using Path = std::vector<Vector>;
+using Vector2_t = georithm::Vector<int, 2>;
+using Path = std::vector<Vector2_t>;
 
 template <class TData>
 using IdData = std::tuple<int, TData>;
@@ -257,133 +261,114 @@ private:
 inline static CostCalculator globalCostCalculator;
 inline static EdgeCostCalculator globalEdgeCostCalculator;
 
-bool is_valid_pos(const Vector& _at)
+bool is_valid_pos(const Vector2_t& at)
 {
 	assert(RPG::map);
 	auto& map = *RPG::map;
-	return 0 <= _at.x && _at.x < map.getWidth() &&
-		0 <= _at.y && _at.y < map.getHeight();
+	return 0 <= at.x() && at.x() < map.getWidth() &&
+		0 <= at.y() && at.y() < map.getHeight();
 }
+
+struct VectorLess
+{
+	constexpr bool operator ()(const Vector2_t& lhs, const Vector2_t& rhs) const noexcept
+	{
+		return lhs.x() < rhs.x() || (lhs.x() == rhs.x() && lhs.y() < rhs.y());
+	}
+};
+
+using NodeInfo = sl::graph::AStarNodeInfo_t<Vector2_t, int>;
+using Node = std::pair<Vector2_t, NodeInfo>;
 
 class Pathfinder
 {
 public:
-	std::optional<int> calc_path(const Vector& _end, RPG::Character& _character)
+	std::optional<int> calc_path(const Vector2_t& destination, RPG::Character& character)
 	{
-		Vector start{ _character.x, _character.y };
+		Vector2_t start{ character.x, character.y };
 
-		struct VectorLess
-		{
-			bool operator ()(const Vector& _lhs, const Vector& _rhs) const
-			{
-				return _lhs.x < _rhs.x || (_lhs.x == _rhs.x && _lhs.y < _rhs.y);
-			}
-		};
-
-		auto costCalculator = [](const Vector& _pos)
-		{
-			auto tileId = RPG::map->getLowerLayerTileId(_pos.x, _pos.y);
-			return globalCostCalculator.get_cost(RPG::map->getTerrainId(tileId));
-			//return RPG::map->getTerrainId(tileId);
-		};
-
-		auto edgeCostCalculator = [](const Vector& _from, const Vector& _to)
-		{
-			auto fromTerrainId = RPG::map->getTerrainId(RPG::map->getLowerLayerTileId(_from.x, _from.y));
-			auto toTerrainId = RPG::map->getTerrainId(RPG::map->getLowerLayerTileId(_to.x, _to.y));
-			return globalEdgeCostCalculator.get_cost(fromTerrainId, toTerrainId);
-			//return RPG::map->getTerrainId(tileId);
-		};
-		
-		auto heuristicCalculator = [](const Vector& _pos, const Vector& _dest)
-		{
-			auto diff = _dest - _pos;
-			return std::abs(diff.x) + std::abs(diff.y);
-		};
-
-		auto neighbourSearcher = [&_character](const auto& _node, auto&& _callback)
+		auto neighbourSearcher = [&character](const Vector2_t& position, const auto& node, auto callback)
 		{
 			for (int i = 0; i < 4; ++i)
 			{
-				Vector dir{ 0, 0 };
+				auto to = position;
 				switch (i)
 				{
-				case 0: dir.x = 1; break;
-				case 1: dir.x = -1; break;
-				case 2: dir.y = 1; break;
-				case 3: dir.y = -1; break;
+				case 0: ++to.x(); break;
+				case 1: --to.x(); break;
+				case 2: ++to.y(); break;
+				case 3: --to.y(); break;
 				}
-				auto at = _node.vertex + dir;
-				if (is_valid_pos(at) && _character.isMovePossible(_node.vertex.x, _node.vertex.y, at.x, at.y))
-					_callback(at);
+				if (is_valid_pos(to) && character.isMovePossible(position.x(), position.y(), to.x(), to.y()))
+					callback(to);
+			}
+		};
+		
+		class PropertyMap
+		{
+		public:
+			using VertexType = Vector2_t;
+			using WeightType = int;
+
+			int heuristic(const Vector2_t& vertex, const Vector2_t& destination) const noexcept
+			{
+				auto dist = abs(vertex - destination);
+				return dist.x() + dist.y();
+			}
+
+			int edgeWeight(const Vector2_t& from, const Vector2_t& to) const noexcept
+			{
+				auto fromTerrainId = RPG::map->getTerrainId(RPG::map->getLowerLayerTileId(from.x(), from.y()));
+				auto toTerrainId = RPG::map->getTerrainId(RPG::map->getLowerLayerTileId(to.x(), to.y()));
+				return globalEdgeCostCalculator.get_cost(fromTerrainId, toTerrainId);
+			}
+
+			int nodeWeight(const Vector2_t& vertex) const noexcept
+			{
+				auto tileId = RPG::map->getLowerLayerTileId(vertex.x(), vertex.y());
+				return globalCostCalculator.get_cost(RPG::map->getTerrainId(tileId));
 			}
 		};
 
-		class TableVisitationTracker
+		class StateMap
 		{
 		public:
-			TableVisitationTracker(std::size_t _width, std::size_t _height) :
-				m_Tracker{ _width, _height }
+			StateMap() :
+				m_NodeMap{ static_cast<std::size_t>(RPG::map->getWidth()), static_cast<std::size_t>(RPG::map->getHeight()) }
 			{
 			}
-			
-			decltype(auto) operator [](const Vector& _at)
+
+			auto& operator [](const Vector2_t& at) const noexcept
 			{
-				return m_Tracker[_at.x][_at.y];
+				return m_NodeMap[at.x()][at.y()];
+			}
+
+			auto& operator [](const Vector2_t& at) noexcept
+			{
+				return m_NodeMap[at.x()][at.y()];
 			}
 			
 		private:
-			sl::container::Vector2d<bool> m_Tracker;
+			sl::container::Vector2d<NodeInfo> m_NodeMap;
 		};
-
-		using Node = sl::graph::AStarNode<Vector, int>;
-		struct NodeVectorLess
-		{
-			bool operator ()(const Node& _lhs, const Node& _rhs) const
-			{
-				return VectorLess{}(_lhs.vertex, _rhs.vertex);
-			}
-
-			bool operator ()(const Node& _lhs, const Vector& _rhs) const
-			{
-				return VectorLess{}(_lhs.vertex, _rhs);
-			}
-
-			bool operator ()(const Vector& _lhs, const Node& _rhs) const
-			{
-				return VectorLess{}(_lhs, _rhs.vertex);
-			}
-		};
+		StateMap stateMap;
+		sl::graph::traverseAStar(start, destination, PropertyMap{}, neighbourSearcher, stateMap);
 		
-		sl::container::SortedVector<Node, NodeVectorLess> closedList;
-		sl::graph::traverse_astar(start, _end, neighbourSearcher,
-			TableVisitationTracker{ static_cast<std::size_t>(RPG::map->getWidth()), static_cast<std::size_t>(RPG::map->getHeight()) },
-			heuristicCalculator, costCalculator, edgeCostCalculator,
-			[&closedList](const Node& _node)
-			{
-				closedList.insert(_node);
-			}
-		);
-		
-		if (auto path = _extract_path(closedList, _end))
+		if (auto path = _extract_path(stateMap, destination))
 			return globalPathMgr.insert_path(std::move(*path));
 		return std::nullopt;
 	}
 	
 private:
 	template <class TClosedList>
-	std::optional<Path> _extract_path(const TClosedList& _closedList, Vector _end)
+	std::optional<Path> _extract_path(const TClosedList& stateMap, const Vector2_t& destination)
 	{
 		Path path;
-		auto itr = _closedList.find(_end);
-		if (itr == std::end(_closedList))
-			return std::nullopt;
-
-		path.emplace_back(itr->vertex);
-		while (itr->parent)
+		std::optional<Vector2_t> currentPos{ destination };
+		while (currentPos)
 		{
-			path.emplace_back(*itr->parent);
-			itr = _closedList.find(*itr->parent);
+			path.emplace_back(*currentPos);
+			currentPos = stateMap[*currentPos].parent;
 		}
 		std::reverse(std::begin(path), std::end(path));
 		return path;
