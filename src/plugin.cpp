@@ -178,7 +178,7 @@ struct ParamError : std::runtime_error
 
 void cmd_find_path(const char* _text, const RPG::ParsedCommentData* _parsedData)
 {
-	auto begin = std::chrono::steady_clock::now();
+	//auto begin = std::chrono::steady_clock::now();
 
 	if (_parsedData->parametersCount != 5)
 		throw ParamError("cmd_find_path: Invalid param count.");
@@ -200,8 +200,8 @@ void cmd_find_path(const char* _text, const RPG::ParsedCommentData* _parsedData)
 		}
 	}
 
-	auto diff = std::chrono::steady_clock::now() - begin;
-	RPG::variables[5000] = diff.count() / 1000;
+	//auto diff = std::chrono::steady_clock::now() - begin;
+	//RPG::variables[5000] = diff.count() / 1000;
 }
 
 void cmd_get_path_length(const char* _text, const RPG::ParsedCommentData* _parsedData)
