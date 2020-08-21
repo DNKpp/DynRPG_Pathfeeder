@@ -1,34 +1,46 @@
 ﻿{
-  "configurations": [
-    {
-      "name": "x86-Clang-Debug",
-      "generator": "Ninja",
-      "configurationType": "Debug",
-      "buildRoot": "${projectDir}\\out\\build\\${name}",
-      "installRoot": "${projectDir}\\out\\install\\${name}",
-      "cmakeCommandArgs": "",
-      "buildCommandArgs": "-v",
-      "ctestCommandArgs": "",
-      "inheritEnvironments": [ "clang_cl_x86" ],
-      "variables": []
-    },
-    {
-      "name": "x86-Clang-Release",
-      "generator": "Ninja",
-      "configurationType": "RelWithDebInfo",
-      "buildRoot": "${projectDir}\\out\\build\\${name}",
-      "installRoot": "${projectDir}\\out\\install\\${name}",
-      "cmakeCommandArgs": "",
-      "buildCommandArgs": "-v",
-      "ctestCommandArgs": "",
-      "inheritEnvironments": [ "clang_cl_x86" ],
-      "variables": [
-        {
-          "name": "CMAKE_CXX_FLAGS_RELWITHDEBINFO",
-          "value": "/MD /Zi /O2 /Oy- /Ob1 /DNDEBUG",
-          "type": "STRING"
-        }
-      ]
-    }
-  ]
+	"configurations": [
+		{
+			"name": "x86-Clang-Debug",
+			"generator": "Ninja",
+			"configurationType": "Debug",
+			"buildRoot": "${projectDir}\\out\\build\\${name}",
+			"installRoot": "${projectDir}\\out\\install\\${name}",
+			"cmakeCommandArgs": "",
+			"buildCommandArgs": "-v",
+			"ctestCommandArgs": "",
+			"inheritEnvironments": [ "clang_cl_x86" ],
+			"variables": []
+		},
+		{
+			"name": "x86-Clang-Release",
+			"generator": "Ninja",
+			"configurationType": "Release",
+			"buildRoot": "${projectDir}\\out\\build\\${name}",
+			"installRoot": "${projectDir}\\out\\install\\${name}",
+			"cmakeCommandArgs": "",
+			"buildCommandArgs": "-v",
+			"ctestCommandArgs": "",
+			"inheritEnvironments": [ "clang_cl_x86" ],
+			"variables": []
+		},
+		{
+			"name": "x86-Clang-RelDebInfo",
+			"generator": "Ninja",
+			"configurationType": "RelWithDebInfo",
+			"buildRoot": "${projectDir}\\out\\build\\${name}",
+			"installRoot": "${projectDir}\\out\\install\\${name}",
+			"cmakeCommandArgs": "",
+			"buildCommandArgs": "",
+			"ctestCommandArgs": "",
+			"inheritEnvironments": [ "clang_cl_x86" ],
+			"variables": [
+				{
+					"name": "CMAKE_CXX_FLAGS_RELWITHDEBINFO",
+					"value": "/MD /Zi /O2 /Oy- /Ob1 /DNDEBUG",
+					"type": "STRING"
+				}
+			]
+		}
+	]
 }
