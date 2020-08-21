@@ -22,7 +22,13 @@
 			"buildCommandArgs": "-v",
 			"ctestCommandArgs": "",
 			"inheritEnvironments": [ "clang_cl_x86" ],
-			"variables": []
+			"variables": [
+				{
+					"name": "CMAKE_CXX_FLAGS_RELEASE",
+					"value": "/MD /O2 /Ob3 /Oy- /DNDEBUG",
+					"type": "STRING"
+				}
+			]
 		},
 		{
 			"name": "x86-Clang-RelDebInfo",
