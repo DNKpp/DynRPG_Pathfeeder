@@ -100,12 +100,16 @@ private:
 		{
 			auto valBegin = std::find_if_not(std::rbegin(token), std::rend(token), [](char _c) { return '0' <= _c && _c <= '9'; }).base();
 			if (valBegin == std::end(token))
+			{
 				return std::nullopt;
+			}
 
 			int curIndex = 0;
 			auto result = std::from_chars(&*valBegin, token.data() + token.size(), curIndex);
 		    if (result.ec == std::errc::invalid_argument)
+		    {
 		        return std::nullopt;
+		    }
 
 			try
 			{
@@ -197,7 +201,7 @@ void cmd_find_path(const char* _text, const RPG::ParsedCommentData* _parsedData)
 	}
 
 	auto diff = std::chrono::steady_clock::now() - begin;
-	RPG::variables[50] = diff.count() / 1000;
+	RPG::variables[5000] = diff.count() / 1000;
 }
 
 void cmd_get_path_length(const char* _text, const RPG::ParsedCommentData* _parsedData)

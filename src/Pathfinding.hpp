@@ -24,22 +24,22 @@ using IdData = std::tuple<int, TData>;
 
 struct IdLess
 {
-	template <class TData>
-	bool operator ()(const IdData<TData>& _lhs, const IdData<TData>& _rhs) const
+	template <class TLhs, class TRhs>
+	constexpr bool operator ()(const TLhs& lhs, const TRhs& rhs) const noexcept
 	{
-		return std::get<0>(_lhs) < std::get<0>(_rhs);
+		return id(lhs) < id(rhs);
+	}
+
+private:
+	static constexpr int id(int i) noexcept
+	{
+		return i;
 	}
 
 	template <class TData>
-	bool operator ()(const IdData<TData>& _lhs, int _rhs) const
+	static constexpr int id(const IdData<TData>& data) noexcept
 	{
-		return std::get<0>(_lhs) < _rhs;
-	}
-
-	template <class TData>
-	bool operator ()(int _lhs, const IdData<TData>& _rhs) const
-	{
-		return _lhs < std::get<0>(_rhs);
+		return std::get<0>(data);
 	}
 };
 
@@ -52,7 +52,7 @@ private:
 	using PathNode = IdData<Path>;
 	
 public:
-	const Path* find_path(int _id) const
+	const Path* find_path(int _id) const noexcept
 	{
 		if (auto itr = m_Paths.find(_id); itr != std::end(m_Paths))
 			return &std::get<Path>(*itr);
@@ -66,13 +66,13 @@ public:
 		return id;
 	}
 
-	void clear_path(int _id)
+	void clear_path(int _id) noexcept
 	{
 		if (auto itr = m_Paths.find(_id); itr != std::end(m_Paths))
 			m_Paths.erase(itr);
 	}
 	
-	void clear()
+	void clear() noexcept
 	{
 		m_Paths.clear();
 		m_NextId = 1;
@@ -101,13 +101,13 @@ public:
 			m_CostMap.insert_or_assign(IdData<data_type>{_terrain_id, -_id});
 	}
 	
-	void reset_cost(int _terrain_id)
+	void reset_cost(int _terrain_id) noexcept
 	{
 		if (auto itr = m_CostMap.find(_terrain_id); itr != std::end(m_CostMap))
 			m_CostMap.erase(itr);
 	}
 	
-	int get_cost(int _terrain_id) const
+	int get_cost(int _terrain_id) const noexcept
 	{
 		if (auto itr = m_CostMap.find(_terrain_id); itr != std::end(m_CostMap))
 		{
@@ -119,12 +119,12 @@ public:
 		return _terrain_id;
 	}
 	
-	void clear()
+	void clear() noexcept
 	{
 		m_CostMap.clear();
 	}
 
-	friend std::ostream& operator <<(std::ostream& _out, const CostCalculator& _obj)
+	friend std::ostream& operator <<(std::ostream& _out, const CostCalculator& _obj) noexcept
 	{
 		auto& data = _obj.m_CostMap;
 		_out << std::size(data) << " ";
@@ -134,7 +134,7 @@ public:
 		return _out;
 	}
 
-	friend std::istream& operator >>(std::istream& _in, CostCalculator& _obj)
+	friend std::istream& operator >>(std::istream& _in, CostCalculator& _obj) noexcept
 	{
 		auto& data = _obj.m_CostMap;
 		data.clear();
@@ -169,25 +169,24 @@ public:
 
 	struct CostKeyLess
 	{
-		bool operator ()(const CostKey& _lhs, const CostKey& _rhs) const
+		template <class TLhs, class TRhs>
+		bool operator ()(const TLhs& lhs, const TRhs& rhs) const noexcept
 		{
-			return _lhs.first < _rhs.first ||
-				(_lhs.first == _rhs.first && _lhs.second < _rhs.second);
-		}
-		
-		bool operator ()(const Cost& _lhs, const Cost& _rhs) const
-		{
-			return (*this)(_lhs.key, _rhs.key);
+			auto& lhsKey = key(lhs);
+			auto& rhsKey = key(rhs);
+			return lhsKey.first < rhsKey.first ||
+				(lhsKey.first == rhsKey.first && lhsKey.second < rhsKey.second);
 		}
 
-		bool operator ()(const Cost& _lhs, const CostKey& _rhs) const
+	private:
+		static constexpr const CostKey& key(const CostKey& key) noexcept
 		{
-			return (*this)(_lhs.key, _rhs);
+			return key;
 		}
 
-		bool operator ()(const CostKey& _lhs, const Cost& _rhs) const
+		static constexpr const CostKey& key(const Cost& cost) noexcept
 		{
-			return (*this)(_lhs, _rhs.key);
+			return cost.key;
 		}
 	};
 	
@@ -203,13 +202,13 @@ public:
 			m_Costs.insert_or_assign(Cost{ { _from_terrain_id, _to_terrain_id }, -_id });
 	}
 	
-	void reset_cost(int _from_terrain_id, int _to_terrain_id)
+	void reset_cost(int _from_terrain_id, int _to_terrain_id) noexcept
 	{
 		if (auto itr = m_Costs.find(CostKey{ _from_terrain_id, _to_terrain_id }); itr != std::end(m_Costs))
 			m_Costs.erase(itr);
 	}
 	
-	int get_cost(int _from_terrain_id, int _to_terrain_id) const
+	int get_cost(int _from_terrain_id, int _to_terrain_id) const noexcept
 	{
 		if (auto itr = m_Costs.find(CostKey{ _from_terrain_id, _to_terrain_id }); itr != std::end(m_Costs))
 		{
@@ -221,7 +220,7 @@ public:
 		return 0;
 	}
 	
-	void clear()
+	void clear() noexcept
 	{
 		m_Costs.clear();
 	}
@@ -261,7 +260,7 @@ private:
 inline static CostCalculator globalCostCalculator;
 inline static EdgeCostCalculator globalEdgeCostCalculator;
 
-bool is_valid_pos(const Vector2_t& at)
+inline bool isValidPos(const Vector2_t& at) noexcept
 {
 	assert(RPG::map);
 	auto& map = *RPG::map;
@@ -287,7 +286,7 @@ public:
 	{
 		Vector2_t start{ character.x, character.y };
 
-		auto neighbourSearcher = [&character](const Vector2_t& position, const auto& node, auto callback)
+		auto neighbourSearcher = [&character](const Vector2_t& position, const auto& node, auto callback) noexcept
 		{
 			for (int i = 0; i < 4; ++i)
 			{
@@ -299,7 +298,7 @@ public:
 				case 2: ++to.y(); break;
 				case 3: --to.y(); break;
 				}
-				if (is_valid_pos(to) && character.isMovePossible(position.x(), position.y(), to.x(), to.y()))
+				if (isValidPos(to) && character.isMovePossible(position.x(), position.y(), to.x(), to.y()))
 					callback(to);
 			}
 		};
