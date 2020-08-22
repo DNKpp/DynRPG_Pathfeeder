@@ -1,8 +1,9 @@
 #pragma once
 
 #include <Simple-Graph/AStar.hpp>
-#include "Simple-Utility/container/Vector2d.hpp"
-#include "Simple-Utility/container/SortedVector.hpp"
+#include <Simple-Utility/container/Vector2d.hpp>
+#include <Simple-Utility/container/SortedVector.hpp>
+#include <Simple-Utility/Bitmask.hpp>
 
 #include <georithm/Vector.hpp>
 
@@ -21,6 +22,9 @@ using Path = std::vector<Vector2_t>;
 
 template <class TData>
 using IdData = std::tuple<int, TData>;
+
+inline const std::size_t MaxTerrainId = 1000;
+using NodeCostState = std::array<int, MaxTerrainId>;
 
 struct IdLess
 {
@@ -111,10 +115,7 @@ public:
 	{
 		if (auto itr = m_CostMap.find(_terrain_id); itr != std::end(m_CostMap))
 		{
-			auto value = std::get<1>(*itr);
-			if (value < 0)
-				return std::max(1, RPG::system->variables[-value]);
-			return std::max(1, value);
+			return valueToCost(std::get<1>(*itr));
 		}
 		return _terrain_id;
 	}
@@ -122,6 +123,16 @@ public:
 	void clear() noexcept
 	{
 		m_CostMap.clear();
+	}
+
+	NodeCostState grabCostState() const noexcept
+	{
+		NodeCostState state{};
+		for (auto [id, value] : m_CostMap)
+		{
+			state[id] = valueToCost(value);
+		}
+		return state;
 	}
 
 	friend std::ostream& operator <<(std::ostream& _out, const CostCalculator& _obj) noexcept
@@ -154,6 +165,13 @@ public:
 	
 private:
 	IdDataSortedVector<data_type> m_CostMap;
+
+	int valueToCost(int value) const noexcept
+	{
+		if (value < 0)
+			return std::max(0, RPG::system->variables[-value]);
+		return value;
+	}
 };
 
 class EdgeCostCalculator
@@ -257,8 +275,8 @@ private:
 	sl::container::SortedVector<Cost, CostKeyLess> m_Costs;
 };
 
-inline static CostCalculator globalCostCalculator;
-inline static EdgeCostCalculator globalEdgeCostCalculator;
+inline CostCalculator globalCostCalculator;
+inline EdgeCostCalculator globalEdgeCostCalculator;
 
 inline bool isValidPos(const Vector2_t& at) noexcept
 {
@@ -279,6 +297,60 @@ struct VectorLess
 using NodeInfo = sl::graph::AStarNodeInfo_t<Vector2_t, int>;
 using Node = std::pair<Vector2_t, NodeInfo>;
 
+class PropertyMap
+{
+public:
+	using VertexType = Vector2_t;
+	using WeightType = int;
+
+	int heuristic(const Vector2_t& vertex, const Vector2_t& destination) const noexcept
+	{
+		auto dist = abs(vertex - destination);
+		return dist.x() + dist.y();
+	}
+
+	int edgeWeight(const Vector2_t& from, const Vector2_t& to) const noexcept
+	{
+		auto fromTerrainId = RPG::map->getTerrainId(RPG::map->getLowerLayerTileId(from.x(), from.y()));
+		auto toTerrainId = RPG::map->getTerrainId(RPG::map->getLowerLayerTileId(to.x(), to.y()));
+		return globalEdgeCostCalculator.get_cost(fromTerrainId, toTerrainId);
+	}
+
+	int nodeWeight(const Vector2_t& vertex) const noexcept
+	{
+		auto terrainId = RPG::map->getTerrainId(RPG::map->getLowerLayerTileId(vertex.x(), vertex.y()));
+		assert(0 < terrainId < size(m_NodeCosts));
+		return m_NodeCosts[terrainId];
+		//return globalCostCalculator.get_cost(RPG::map->getTerrainId(tileId));
+		
+	}
+
+private:
+	NodeCostState m_NodeCosts{ globalCostCalculator.grabCostState() };
+};
+
+class StateMap
+{
+public:
+	StateMap() :
+		m_NodeMap{ static_cast<std::size_t>(RPG::map->getWidth()), static_cast<std::size_t>(RPG::map->getHeight()) }
+	{
+	}
+
+	auto& operator [](const Vector2_t& at) const noexcept
+	{
+		return m_NodeMap[at.x()][at.y()];
+	}
+
+	auto& operator [](const Vector2_t& at) noexcept
+	{
+		return m_NodeMap[at.x()][at.y()];
+	}
+	
+private:
+	sl::container::Vector2d<NodeInfo> m_NodeMap;
+};
+
 class Pathfinder
 {
 public:
@@ -293,63 +365,26 @@ public:
 				auto to = position;
 				switch (i)
 				{
-				case 0: ++to.x(); break;
-				case 1: --to.x(); break;
-				case 2: ++to.y(); break;
-				case 3: --to.y(); break;
+				case 0:
+					++to.x();
+					break;
+				case 1:
+					--to.x();
+					break;
+				case 2:
+					++to.y();
+					break;
+				case 3:
+					--to.y();
+					break;
 				}
 				if (to != node.parent && isValidPos(to) && character.isMovePossible(position.x(), position.y(), to.x(), to.y()))
+				{
 					callback(to);
-			}
-		};
-		
-		class PropertyMap
-		{
-		public:
-			using VertexType = Vector2_t;
-			using WeightType = int;
-
-			int heuristic(const Vector2_t& vertex, const Vector2_t& destination) const noexcept
-			{
-				auto dist = abs(vertex - destination);
-				return dist.x() + dist.y();
-			}
-
-			int edgeWeight(const Vector2_t& from, const Vector2_t& to) const noexcept
-			{
-				auto fromTerrainId = RPG::map->getTerrainId(RPG::map->getLowerLayerTileId(from.x(), from.y()));
-				auto toTerrainId = RPG::map->getTerrainId(RPG::map->getLowerLayerTileId(to.x(), to.y()));
-				return globalEdgeCostCalculator.get_cost(fromTerrainId, toTerrainId);
-			}
-
-			int nodeWeight(const Vector2_t& vertex) const noexcept
-			{
-				auto tileId = RPG::map->getLowerLayerTileId(vertex.x(), vertex.y());
-				return globalCostCalculator.get_cost(RPG::map->getTerrainId(tileId));
+				}
 			}
 		};
 
-		class StateMap
-		{
-		public:
-			StateMap() :
-				m_NodeMap{ static_cast<std::size_t>(RPG::map->getWidth()), static_cast<std::size_t>(RPG::map->getHeight()) }
-			{
-			}
-
-			auto& operator [](const Vector2_t& at) const noexcept
-			{
-				return m_NodeMap[at.x()][at.y()];
-			}
-
-			auto& operator [](const Vector2_t& at) noexcept
-			{
-				return m_NodeMap[at.x()][at.y()];
-			}
-			
-		private:
-			sl::container::Vector2d<NodeInfo> m_NodeMap;
-		};
 		StateMap stateMap;
 		sl::graph::traverseAStar(start, destination, PropertyMap{}, neighbourSearcher, stateMap);
 		
