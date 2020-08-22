@@ -362,6 +362,9 @@ private:
 	template <class TClosedList>
 	std::optional<Path> _extract_path(const TClosedList& stateMap, const Vector2_t& destination)
 	{
+		if (!stateMap[destination].parent)
+			return std::nullopt;
+		
 		Path path;
 		std::optional<Vector2_t> currentPos{ destination };
 		while (currentPos)
