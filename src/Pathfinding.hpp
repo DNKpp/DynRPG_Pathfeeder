@@ -298,7 +298,7 @@ public:
 				case 2: ++to.y(); break;
 				case 3: --to.y(); break;
 				}
-				if (isValidPos(to) && character.isMovePossible(position.x(), position.y(), to.x(), to.y()))
+				if (to != node.parent && isValidPos(to) && character.isMovePossible(position.x(), position.y(), to.x(), to.y()))
 					callback(to);
 			}
 		};
