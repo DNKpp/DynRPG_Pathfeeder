@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <chrono>
 #include <optional>
+#include <execution>
 
 #undef max		// lol
 
@@ -24,7 +25,16 @@ template <class TData>
 using IdData = std::tuple<int, TData>;
 
 inline const std::size_t MaxTerrainId = 1000;
-using NodeCostState = std::array<int, MaxTerrainId>;
+using NodeCostCache = std::array<int, MaxTerrainId>;
+using EdgeCostCache = sl::container::Vector2d<int>;
+
+constexpr NodeCostCache initNodeCostCache() noexcept
+{
+	NodeCostCache cache{};
+	std::iota(begin(cache), end(cache), 0);
+	return cache;
+}
+constexpr NodeCostCache nodeCostCacheTemplate = initNodeCostCache();
 
 struct IdLess
 {
@@ -125,14 +135,20 @@ public:
 		m_CostMap.clear();
 	}
 
-	NodeCostState grabCostState() const noexcept
+	NodeCostCache grabCostState() const noexcept
 	{
-		NodeCostState state{};
-		for (auto [id, value] : m_CostMap)
-		{
-			state[id] = valueToCost(value);
-		}
-		return state;
+		auto cache = nodeCostCacheTemplate;
+		std::for_each(
+					std::execution::seq,
+					std::begin(m_CostMap),
+					std::end(m_CostMap),
+					[&](const auto& element)
+					{
+						auto id = std::get<0>(element);
+						cache[id] = valueToCost(std::get<1>(element));
+					}
+		);
+		return cache;
 	}
 
 	friend std::ostream& operator <<(std::ostream& _out, const CostCalculator& _obj) noexcept
@@ -174,6 +190,8 @@ private:
 	}
 };
 
+EdgeCostCache globalEdgeCostCache(MaxTerrainId - 1, MaxTerrainId - 1, 0);
+
 class EdgeCostCalculator
 {
 public:
@@ -207,6 +225,21 @@ public:
 			return cost.key;
 		}
 	};
+
+	EdgeCostCache& grabCostState() const
+	{
+		std::fill(std::execution::seq, std::begin(globalEdgeCostCache), std::end(globalEdgeCostCache), 0);
+		std::for_each(
+					std::execution::seq,
+					std::begin(m_Costs),
+					std::end(m_Costs),
+					[](const auto& element)
+					{
+						globalEdgeCostCache[element.key.first][element.key.second] = valueToCost(element.cost);
+					}
+		);
+		return globalEdgeCostCache;
+	}
 	
 	void set_cost(int _from_terrain_id, int _to_terrain_id, int _cost)
 	{
@@ -230,10 +263,7 @@ public:
 	{
 		if (auto itr = m_Costs.find(CostKey{ _from_terrain_id, _to_terrain_id }); itr != std::end(m_Costs))
 		{
-			auto value = itr->cost;
-			if (value < 0)
-				return std::max(0, RPG::system->variables[-value]);
-			return std::max(0, value);
+			return valueToCost(itr->cost);
 		}
 		return 0;
 	}
@@ -273,6 +303,13 @@ public:
 	
 private:
 	sl::container::SortedVector<Cost, CostKeyLess> m_Costs;
+
+	static int valueToCost(int value) noexcept
+	{
+		if (value < 0)
+			return std::max(0, RPG::system->variables[-value]);
+		return value;
+	}
 };
 
 inline CostCalculator globalCostCalculator;
@@ -313,7 +350,9 @@ public:
 	{
 		auto fromTerrainId = RPG::map->getTerrainId(RPG::map->getLowerLayerTileId(from.x(), from.y()));
 		auto toTerrainId = RPG::map->getTerrainId(RPG::map->getLowerLayerTileId(to.x(), to.y()));
-		return globalEdgeCostCalculator.get_cost(fromTerrainId, toTerrainId);
+		assert(m_EdgeCosts.width() == m_EdgeCosts.height());
+		assert(m_EdgeCosts.isInRange(fromTerrainId - 1, toTerrainId - 1));
+		return m_EdgeCosts[fromTerrainId - 1][toTerrainId - 1];
 	}
 
 	int nodeWeight(const Vector2_t& vertex) const noexcept
@@ -321,12 +360,11 @@ public:
 		auto terrainId = RPG::map->getTerrainId(RPG::map->getLowerLayerTileId(vertex.x(), vertex.y()));
 		assert(0 < terrainId < size(m_NodeCosts));
 		return m_NodeCosts[terrainId];
-		//return globalCostCalculator.get_cost(RPG::map->getTerrainId(tileId));
-		
 	}
 
 private:
-	NodeCostState m_NodeCosts{ globalCostCalculator.grabCostState() };
+	NodeCostCache m_NodeCosts{ globalCostCalculator.grabCostState() };
+	EdgeCostCache& m_EdgeCosts{ globalEdgeCostCalculator.grabCostState() };
 };
 
 class StateMap
